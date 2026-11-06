@@ -1517,8 +1517,8 @@
         const li = document.createElement('li');
         li.className = 'item'; li.dataset.file = f; li.dataset.index = i + 1;
         if (state.opts.timeline) { li.style.setProperty('--sc', SONGS[songOf(f) - 1].color); li.dataset.song = songOf(f); if (collapsed.has(songOf(f))) li.classList.add('folded'); }
-        li.innerHTML = `<button class="grip" type="button" aria-label="Move slide ${i + 1} (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><img loading="lazy" decoding="async" alt="" draggable="false" src="${thumbOf(f)}"><div class="info"><b><i>${i + 1}</i> · </b><small></small></div><div class="rowacts"><button class="rowbtn send" type="button" aria-label="Send slide ${i + 1} to a song" title="Send to a song">${ICON_NOTE}</button><button class="rowbtn" type="button" aria-label="Edit slide ${i + 1}">${ICON_PEN}</button><button class="del" type="button" aria-label="Delete slide ${i + 1}">${ICON_X}</button></div>`;
-        li.querySelector('b').append(document.createTextNode([dateOf(f) || 'No date', byFile[f].short].filter(Boolean).join(' · ')));
+        li.innerHTML = `<button class="grip" type="button" aria-label="Move slide ${i + 1} (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><img loading="lazy" decoding="async" alt="" draggable="false" src="${thumbOf(f)}"><div class="info"><b><i>${i + 1}</i></b><small></small></div><div class="rowacts"><button class="rowbtn send" type="button" aria-label="Send slide ${i + 1} to a song" title="Send to a song">${ICON_NOTE}</button><button class="rowbtn" type="button" aria-label="Edit slide ${i + 1}">${ICON_PEN}</button><button class="del" type="button" aria-label="Delete slide ${i + 1}">${ICON_X}</button></div>`;
+        { const t = [dateOf(f), byFile[f].short].filter(Boolean).join(' · ') || (captionOf(f) || byFile[f].caption ? '' : 'No date'); if (t) li.querySelector('b').append(document.createTextNode(' · ' + t)); }
         li.querySelector('small').textContent = (isOwn(f) ? 'Your photo · ' : '') + (captionOf(f) || byFile[f].caption || '').replace(/\s+/g, ' ').trim();
         return li;
       };
