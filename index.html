@@ -14,7 +14,7 @@
       --font:Georgia, "Times New Roman", serif;
       --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
       --fx:1.7s; --sw:100vw; --sh:100dvh; --panel-w:380px; --panel-h:58dvh;
-      --padx:clamp(12px,6vw,100px); --reserve:200px;
+      --padx:clamp(12px,6vw,100px); --reserve:175px;
       color-scheme:dark;
     }
     :root[data-light] { --bd-bright:1.05; --bd-op:.4; color-scheme:light; }
@@ -34,19 +34,33 @@
     .backdrop { position:absolute; inset:-10%; background-size:cover; background-position:center; filter:blur(50px) saturate(1.2) brightness(var(--bd-bright)); opacity:var(--bd-op); }
     .fig { position:relative; display:grid; place-items:center; width:calc(100% - var(--padx)); height:calc(100% - var(--reserve)); margin-top:calc(var(--safe-t) + 20px); }
     .slide.has-caption { --reserve:275px; }
-    .slide.active .fig.drift { animation:drift 16s ease-out both; }
-    @keyframes drift { from { transform:scale(1); } to { transform:scale(1.045); } }
-    .fig img { display:block; }
-    .st-plain .fig img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 20px 50px rgba(0,0,0,.5)); }
-    .snap { position:relative; box-shadow:0 22px 50px rgba(0,0,0,.5); transform:rotate(var(--tilt,0deg)); --maxw:calc(var(--sw) - var(--padx) - 24px); --maxh:calc(var(--sh) - var(--reserve) - 44px); }
-    .snap img { width:auto; height:auto; max-width:calc(var(--maxw) - var(--fw)); max-height:calc(var(--maxh) - var(--fh)); }
-    .st-polaroid .snap { --fw:28px; --fh:76px; padding:14px 14px 62px; background:#f8f4ea; }
+    /* Ken Burns: slow zoom + drift, direction varies per slide (--s0/--s1 scale, --x0..--y1 offsets set in JS) */
+    .slide.active .fig.kb { animation:kb var(--kb-dur,16s) linear both; }
+    @keyframes kb { from { transform:translate(var(--x0,0),var(--y0,0)) scale(var(--s0,1)); } to { transform:translate(var(--x1,0),var(--y1,0)) scale(var(--s1,1)); } }
+    /* Every photo sits in a .snap frame; its size is capped so small scans are never blown up past --up x their real size */
+    .snap { position:relative; --bw:0px; --fw:calc(2 * var(--bw)); --fh:calc(2 * var(--bw)); --maxw:calc(var(--sw) - var(--padx) - 24px); --maxh:calc(var(--sh) - var(--reserve) - 44px); padding:var(--bw); transform:rotate(var(--tilt,0deg)); }
+    .snap img { display:block; height:auto; width:min(calc(var(--maxw) - var(--fw)), calc((var(--maxh) - var(--fh)) * var(--r,1.5)), calc(var(--nw,4000) * 1px * var(--up,2))); opacity:1; transition:opacity .6s ease; }
+    .snap img:not(.ready) { opacity:0; }
+    .st-plain .snap { filter:drop-shadow(0 20px 50px rgba(0,0,0,.5)); }
+    .st-border .snap { --bw:clamp(6px,.85vw,12px); background:#f7f4ec; box-shadow:0 18px 46px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.35); }
+    .st-polaroid .snap { --bw:14px; --fh:76px; padding:14px 14px 62px; background:#f8f4ea; box-shadow:0 22px 50px rgba(0,0,0,.5); }
     .st-polaroid .snap::before { content:""; position:absolute; top:-14px; left:50%; width:90px; height:28px; margin-left:-45px; background:rgba(235,224,180,.72); transform:rotate(-3deg); box-shadow:0 1px 3px rgba(0,0,0,.2); }
     .st-polaroid .snap .ink { position:absolute; left:0; right:0; bottom:14px; text-align:center; color:#3c372c; font:italic 1.15rem/1 "Segoe Script","Bradley Hand","Brush Script MT",cursive; }
-    .st-framed .snap { --fw:64px; --fh:64px; padding:18px; background:#f2ece0; border:14px solid; border-image:linear-gradient(135deg,#e6cf94,#a8823a 45%,#efdba5 60%,#8c6a2c) 1; box-shadow:0 22px 50px rgba(0,0,0,.55), inset 0 0 14px rgba(0,0,0,.25); }
-    .st-film .snap { --fw:28px; --fh:60px; padding:28px 14px; background:#15130f; background-image:repeating-linear-gradient(90deg, transparent 0 14px, #d9d2c0 14px 24px, transparent 24px 38px); background-size:100% 12px; background-repeat:repeat-x; background-position:0 8px; }
+    .st-framed .snap { --bw:32px; padding:18px; background:#f2ece0; border:14px solid; border-image:linear-gradient(135deg,#e6cf94,#a8823a 45%,#efdba5 60%,#8c6a2c) 1; box-shadow:0 22px 50px rgba(0,0,0,.55), inset 0 0 14px rgba(0,0,0,.25); }
+    .st-film .snap { --bw:0px; --fw:28px; --fh:60px; padding:28px 14px; background:#15130f; background-image:repeating-linear-gradient(90deg, transparent 0 14px, #d9d2c0 14px 24px, transparent 24px 38px); background-size:100% 12px; background-repeat:repeat-x; background-position:0 8px; box-shadow:0 22px 50px rgba(0,0,0,.5); }
     .st-film .snap::after { content:""; position:absolute; left:0; right:0; bottom:8px; height:12px; background-image:repeating-linear-gradient(90deg, transparent 0 14px, #d9d2c0 14px 24px, transparent 24px 38px); }
     .st-film .snap img { border:1px solid #000; }
+    body.film-on .snap img { filter:sepia(.17) contrast(1.05) saturate(.92); }
+
+    /* ---------- Vintage film look: grain, vignette, warm tint, faint flicker ---------- */
+    .film { position:absolute; inset:0; z-index:5; display:none; overflow:hidden; pointer-events:none; animation:flicker 5s steps(1) infinite; }
+    body.film-on .film { display:block; }
+    .film::before { content:""; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 48%, transparent 52%, rgba(18,10,2,.55) 100%); }
+    .film::after { content:""; position:absolute; inset:0; background:rgba(255,186,110,.06); mix-blend-mode:soft-light; }
+    .grain { position:absolute; inset:-50%; opacity:.16; mix-blend-mode:overlay; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); animation:grain .9s steps(1) infinite; }
+    @keyframes grain { 0%{transform:translate(0,0)} 17%{transform:translate(-6%,4%)} 33%{transform:translate(5%,-7%)} 50%{transform:translate(-4%,-3%)} 67%{transform:translate(7%,6%)} 83%{transform:translate(-8%,-5%)} 100%{transform:translate(0,0)} }
+    @keyframes flicker { 0%,100%{opacity:1} 22%{opacity:.93} 24%{opacity:1} 61%{opacity:.95} 63%{opacity:1} }
+
     .meta { position:absolute; left:0; right:0; bottom:calc(var(--safe-b) + 90px); z-index:3; display:flex; flex-direction:column; align-items:center; gap:10px; padding:0 22px; text-align:center; pointer-events:none; }
     .date { padding:9px 16px 8px; border:1px solid color-mix(in srgb, var(--accent) 50%, transparent); border-radius:999px; background:color-mix(in srgb, var(--bg) 60%, transparent); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); color:var(--accent); font:700 clamp(.72rem,1.1vw,.9rem)/1 Arial,sans-serif; letter-spacing:.2em; text-transform:uppercase; }
     .st-polaroid .date { display:none; }
@@ -194,12 +208,13 @@
     }
     @media (prefers-reduced-motion:reduce) {
       .slide.entering { animation:fxFade .5s both !important; }
-      .slide.active .fig.drift, .cover-copy, .portrait, .slide.active .meta > * { animation:none; }
+      .slide.active .fig.kb, .cover-copy, .portrait, .slide.active .meta > *, .grain, .film { animation:none; }
     }
   </style>
 </head>
 <body class="controls-visible on-cover">
   <main class="stage" id="stage" aria-live="polite">
+    <div class="film" aria-hidden="true"><div class="grain"></div></div>
     <section class="slide cover active" id="cover">
       <button class="customize" id="customize" type="button">✎ Customize</button>
       <div class="cover-copy">
@@ -244,7 +259,7 @@
         <label class="field"><span>Date label</span><input type="text" id="fDate" maxlength="40" placeholder="e.g. 1985 or Summer 1972"></label>
         <label class="field"><span>Caption (optional)</span><textarea id="fCaption" maxlength="600" placeholder="Add a memory or a few words about this photo…"></textarea></label>
         <label class="field"><span>Photo style</span>
-          <select id="fStyle"><option value="default">Use show default</option><option value="plain">Plain</option><option value="polaroid">Polaroid snapshot</option><option value="framed">Gold frame</option><option value="film">Film strip</option></select></label>
+          <select id="fStyle"><option value="default">Use show default</option><option value="border">Thin white border</option><option value="plain">Plain (no border)</option><option value="polaroid">Polaroid snapshot</option><option value="framed">Gold frame</option><option value="film">Film strip</option></select></label>
         <label class="field"><span>Transition into this photo</span>
           <select id="fTx"><option value="default">Use show default</option></select></label>
         <div class="row stack">
@@ -264,10 +279,14 @@
       <span class="label">Whole show</span>
       <label class="field"><span>Default transition</span><select id="oTx"></select></label>
       <label class="field"><span>Default photo style</span>
-        <select id="oStyle"><option value="plain">Plain</option><option value="polaroid">Polaroid snapshot</option><option value="framed">Gold frame</option><option value="film">Film strip</option></select></label>
+        <select id="oStyle"><option value="border">Thin white border</option><option value="plain">Plain (no border)</option><option value="polaroid">Polaroid snapshot</option><option value="framed">Gold frame</option><option value="film">Film strip</option></select></label>
       <label class="field"><span>Seconds per photo</span><input type="number" id="oSeconds" min="2" max="120" step="1"></label>
       <p class="note" id="secondsNote"></p>
-      <label class="check"><input type="checkbox" id="oDrift"> Slow zoom while a photo is showing</label>
+      <label class="field"><span>Ken Burns motion</span>
+        <select id="oMotion"><option value="classic">Classic (slow zoom + drift)</option><option value="gentle">Gentle</option><option value="off">Off (photos stay still)</option></select></label>
+      <label class="field"><span>Photo size</span>
+        <select id="oSize"><option value="1.4">Small — never enlarge much</option><option value="2">Balanced</option><option value="3">Large</option><option value="99">Fill the screen</option></select></label>
+      <label class="check"><input type="checkbox" id="oFilm"> Vintage film look (grain, vignette, warm tone)</label>
     </div>
 
     <div class="pane" data-pane="theme" hidden>
@@ -302,9 +321,9 @@
 
   <script>
     const PLAYLIST_DURATION = 22 * 60 * 1000 + 24 * 1000;
-    const FX_MS = 1700;
+    const fxMs = name => (name === 'fade' ? 2300 : 1700);
     const STORE_KEY = 'poppy-slideshow-v1';
-    const EFFECTS = [['fade','Fade'],['slide','Slide'],['zoom','Zoom in'],['wipe','Wipe'],['blur','Blur dissolve'],['rise','Rise'],['iris','Iris'],['door','Doors open'],['flip','Flip'],['swirl','Swirl']];
+    const EFFECTS = [['fade','Soft crossfade'],['slide','Slide'],['zoom','Zoom in'],['wipe','Wipe'],['blur','Blur dissolve'],['rise','Rise'],['iris','Iris'],['door','Doors open'],['flip','Flip'],['swirl','Swirl']];
     const THEMES = {
       forest:   { label:'Forest',   bg:'#0e1511', accent:'#d8ba7a' },
       midnight: { label:'Midnight', bg:'#0b1220', accent:'#8ab4ff' },
@@ -328,7 +347,7 @@
       v: 1,
       theme: { preset: 'forest', bg: null, accent: null, font: 'classic' },
       cover: { eyebrow: 'In Loving Memory', title: 'Charles Ross', names: '“Charlie”   “Dad”   “Poppy”' },
-      opts: { tx: 'rotate', style: 'plain', drift: true, seconds: 0 },
+      opts: { tx: 'fade', style: 'border', motion: 'classic', size: 2, film: true, seconds: 0 },
       slides: {}, order: [], deleted: [],
     });
     let state = defaults();
@@ -345,7 +364,7 @@
         v: 1,
         theme: { ...d.theme, ...(s.theme || {}) },
         cover: { ...d.cover, ...(s.cover || {}) },
-        opts: { ...d.opts, ...(s.opts || {}) },
+        opts: { ...d.opts, ...(s.opts || {}), ...(s.opts && s.opts.drift === false && !s.opts.motion ? { motion: 'off' } : {}) },
         slides: s.slides && typeof s.slides === 'object' ? s.slides : {},
         order: Array.isArray(s.order) ? s.order : [],
         deleted: Array.isArray(s.deleted) ? s.deleted : [],
@@ -398,20 +417,35 @@
       const bg = document.createElement('div');
       bg.className = 'backdrop'; bg.dataset.bg = srcOf(file); bg.setAttribute('aria-hidden', 'true');
       const fig = document.createElement('div');
-      fig.className = 'fig' + (state.opts.drift ? ' drift' : '');
+      const motion = state.opts.motion;
+      fig.className = 'fig' + (motion !== 'off' ? ' kb' : '');
+      if (motion !== 'off') {
+        const k = motion === 'gentle' ? .05 : .09;
+        const v = [
+          { s0: 1, s1: 1 + k, x0: '0%', y0: '0%', x1: '-1.5%', y1: '-1%' },
+          { s0: 1 + k, s1: 1, x0: '1.5%', y0: '.6%', x1: '0%', y1: '0%' },
+          { s0: 1, s1: 1 + k, x0: '0%', y0: '0%', x1: '1.5%', y1: '-.6%' },
+          { s0: 1, s1: 1 + k, x0: '0%', y0: '0%', x1: '-1%', y1: '1.2%' },
+        ][index % 4];
+        Object.entries(v).forEach(([key, val]) => fig.style.setProperty(`--${key}`, val));
+      }
       const img = document.createElement('img');
       img.dataset.src = srcOf(file);
       img.alt = (byFile[file].caption || '').trim() || `Photo of Charles Ross and family`;
       img.decoding = 'async';
-      if (style === 'plain') fig.append(img);
-      else {
-        const snap = document.createElement('div');
-        snap.className = 'snap';
-        snap.style.setProperty('--tilt', style === 'polaroid' ? `${index % 2 ? -2 : 2}deg` : style === 'framed' ? '0deg' : `${index % 2 ? -1 : 1}deg`);
-        snap.append(img);
-        if (style === 'polaroid') { const ink = document.createElement('div'); ink.className = 'ink'; ink.textContent = date; snap.append(ink); }
-        fig.append(snap);
-      }
+      img.addEventListener('load', () => {
+        img.style.setProperty('--nw', img.naturalWidth);
+        img.style.setProperty('--r', img.naturalWidth / img.naturalHeight);
+        img.classList.add('ready');
+      });
+      img.addEventListener('error', () => img.classList.add('ready'));
+      const snap = document.createElement('div');
+      snap.className = 'snap';
+      if (style === 'polaroid') snap.style.setProperty('--tilt', `${index % 2 ? -2 : 2}deg`);
+      else if (style === 'film') snap.style.setProperty('--tilt', `${index % 2 ? -1 : 1}deg`);
+      snap.append(img);
+      if (style === 'polaroid') { const ink = document.createElement('div'); ink.className = 'ink'; ink.textContent = date; snap.append(ink); }
+      fig.append(snap);
       section.append(bg, fig);
       if (date || caption) {
         const meta = document.createElement('div');
@@ -468,10 +502,13 @@
         incoming.className = incoming.className.replace(STRIP, '').replace(/\s+/g, ' ').trim();
         void incoming.offsetWidth; // restart the animation if this slide was shown before
         incoming.style.setProperty('--dir', current >= previous ? 1 : -1);
-        incoming.classList.add('active', 'entering', `fx-${current === 0 ? 'fade' : effectFor(current)}`);
+        const fx = current === 0 ? 'fade' : effectFor(current), ms = fxMs(fx);
+        incoming.style.setProperty('--fx', `${ms}ms`);
+        incoming.classList.add('active', 'entering', `fx-${fx}`);
         clearTimeout(fxTimer);
-        fxTimer = setTimeout(() => outgoing.classList.remove('leaving'), FX_MS + 100);
+        fxTimer = setTimeout(() => outgoing.classList.remove('leaving'), ms + 100);
       }
+      slides[current]?.querySelector('.fig')?.style.setProperty('--kb-dur', `${Math.round(intervalMs() + 2600)}ms`);
       counter.textContent = current === 0 ? 'Opening' : `${current} / ${slides.length - 1}`;
       progress.style.width = slides.length > 1 ? `${(current / (slides.length - 1)) * 100}%` : '0';
       if (playing) schedule();
@@ -527,6 +564,10 @@
       root.style.setProperty('--font', (FONTS[t.font] || FONTS.classic).css);
       root.toggleAttribute('data-light', light);
       document.querySelector('meta[name=theme-color]').content = bg;
+    }
+    function applyOpts() {
+      document.documentElement.style.setProperty('--up', state.opts.size);
+      document.body.classList.toggle('film-on', !!state.opts.film);
     }
     function applyCover() {
       $('cvEyebrow').textContent = state.cover.eyebrow;
@@ -588,7 +629,7 @@
 
     function syncShow() {
       $('fEyebrow').value = state.cover.eyebrow; $('fTitle').value = state.cover.title; $('fNames').value = state.cover.names;
-      $('oTx').value = state.opts.tx; $('oStyle').value = state.opts.style; $('oDrift').checked = state.opts.drift;
+      $('oTx').value = state.opts.tx; $('oStyle').value = state.opts.style; $('oMotion').value = state.opts.motion; $('oSize').value = String(state.opts.size); $('oFilm').checked = state.opts.film;
       $('oSeconds').value = state.opts.seconds || '';
       $('oSeconds').placeholder = `Auto (${(PLAYLIST_DURATION / 1000 / Math.max(1, files.length)).toFixed(1)}s)`;
       $('secondsNote').textContent = state.opts.seconds
@@ -677,7 +718,9 @@
     bindText('fEyebrow', 'eyebrow'); bindText('fTitle', 'title'); bindText('fNames', 'names');
     $('oTx').addEventListener('change', e => { state.opts.tx = e.target.value; save(); });
     $('oStyle').addEventListener('change', e => { state.opts.style = e.target.value; save(); buildSlides(current); });
-    $('oDrift').addEventListener('change', e => { state.opts.drift = e.target.checked; save(); buildSlides(current); });
+    $('oMotion').addEventListener('change', e => { state.opts.motion = e.target.value; save(); buildSlides(current); });
+    $('oSize').addEventListener('change', e => { state.opts.size = parseFloat(e.target.value); save(); applyOpts(); });
+    $('oFilm').addEventListener('change', e => { state.opts.film = e.target.checked; save(); applyOpts(); });
     $('oSeconds').addEventListener('input', e => {
       const n = parseInt(e.target.value, 10);
       state.opts.seconds = n >= 2 && n <= 120 ? n : 0; save(); syncShow2();
@@ -702,12 +745,12 @@
       try {
         const data = JSON.parse(await file.text());
         if (!data || typeof data !== 'object' || data.v !== 1) throw new Error('bad');
-        state = normalize(data); save(); applyTheme(); applyCover(); buildThemeUi(); buildSlides(0); syncShow(); toast('Loaded your saved version');
+        state = normalize(data); save(); applyTheme(); applyCover(); applyOpts(); buildThemeUi(); buildSlides(0); syncShow(); toast('Loaded your saved version');
       } catch (_) { toast('That file isn’t a saved slideshow'); }
     });
     $('resetBtn').onclick = () => {
       if (!confirm('Reset all edits and go back to the original slideshow?')) return;
-      state = defaults(); save(); applyTheme(); applyCover(); buildThemeUi(); buildSlides(0); syncShow(); toast('Back to the original');
+      state = defaults(); save(); applyTheme(); applyCover(); applyOpts(); buildThemeUi(); buildSlides(0); syncShow(); toast('Back to the original');
     };
 
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { selectTab(t.dataset.tab); if (t.dataset.tab === 'slide') syncSlide(); }));
@@ -717,7 +760,7 @@
 
     // ---------- Start ----------
     loadState();
-    applyTheme(); applyCover(); buildThemeUi();
+    applyTheme(); applyCover(); applyOpts(); buildThemeUi();
     fetch('photos.json').then(r => r.json()).then(list => {
       photos = list; byFile = Object.fromEntries(list.map(p => [p.file, p]));
       buildSlides(0);
