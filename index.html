@@ -643,7 +643,9 @@
     const stage = $('stage'), counter = $('counter'), progress = $('progress'), playPause = $('playPause'), fullscreenBtn = $('fullscreen');
 
     // ---------- Saved edits ----------
-    const defaults = () => ({
+    let BASE = null; // jons-choice.json once it has loaded: the show everyone starts from
+    const defaults = () => (BASE ? JSON.parse(JSON.stringify(BASE)) : builtinDefaults());
+    const builtinDefaults = () => ({
       v: 1,
       theme: { preset: 'forest', bg: null, accent: null, font: 'classic' },
       cover: { eyebrow: 'In Loving Memory', title: 'Charles Ross', names: '“Charlie”   “Dad”   “Poppy”' },
@@ -783,29 +785,16 @@
         list.append(li);
       });
       const o = document.createElement('li'); o.className = 'ver' + (reloadId === '' ? ' now' : ''); o.dataset.id = '';
-      o.innerHTML = '<div class="vtop"><b>Original slideshow</b></div><div class="vmeta">As published, with no edits</div><div class="vacts"><button class="btn" data-act="open" type="button">Open</button></div>';
+      o.innerHTML = '<div class="vtop"><b>Jon’s Choice</b></div><div class="vmeta">The default show, as Jon arranged it</div><div class="vacts"><button class="btn" data-act="open" type="button">Open</button></div>';
       o.querySelector('.vtop').insertAdjacentHTML('beforeend', reloadToggle(reloadId === ''));
       if (currentId === '') o.querySelector('b').insertAdjacentHTML('afterend', '<span class="badge">On screen</span>');
       list.append(o);
-      const jc = document.createElement('li'); jc.className = 'ver'; jc.dataset.id = JONS_ID;
-      jc.innerHTML = '<div class="vtop"><b>Jon’s Choice</b></div><div class="vmeta">The arrangement Jon picked: songs timed to their slides</div><div class="vacts"><button class="btn" data-act="open" type="button">Open</button></div>';
-      list.prepend(jc);
       const ck = readCookie(), have = new Set(versions.map(v => v.id));
       const missing = ck ? ck.ids.filter(x => !have.has(x)).length : 0;
       $('versionWarn').hidden = missing === 0;
       $('versionWarn').textContent = missing ? `This browser remembers ${missing} saved version${missing > 1 ? 's' : ''} that ${missing > 1 ? 'are' : 'is'} no longer in its storage. Browser data may have been cleared. Versions you downloaded can be loaded back from the Slides tab.` : '';
     }
-    const JONS_ID = 'builtin:jons-choice';
-    async function openJonsChoice() {
-      if (isDirty() && !confirm('You have unsaved changes. Open Jon’s Choice anyway? Your unsaved changes will be lost.')) return;
-      let data;
-      try { const r = await fetch('jons-choice.json'); if (!r.ok) throw new Error('missing'); data = await r.json(); } catch (_) { toast('Couldn’t load Jon’s Choice. Check your connection and try again.'); return; }
-      state = normalize(data); currentId = ''; reloadId = ''; markSaved(); await persistAll();
-      await applyState(0); renderVersions();
-      toast('Opened Jon’s Choice. Press Save if you want to keep your own changes to it.');
-    }
     async function openVersion(id) {
-      if (id === JONS_ID) return openJonsChoice();
       const v = versions.find(x => x.id === id);
       if (id && !v) return;
       if (isDirty() && !confirm('You have unsaved changes. Open this version anyway? Your unsaved changes will be lost.')) return;
@@ -1086,7 +1075,11 @@
       img.alt = (byFile[file].caption || '').trim() || `Photo of Charles Ross and family`;
       img.decoding = 'async';
       img.addEventListener('load', () => markReady(img));
-      img.addEventListener('error', () => img.classList.add('ready'));
+      let tries = 0; // a photo that fails to arrive (a dropped connection) is asked for again before giving up
+      img.addEventListener('error', () => {
+        if (tries++ < 3 && img.src) setTimeout(() => { img.src = isOwn(file) ? srcOf(file) : `${srcOf(file)}?r=${tries}`; }, 400 * tries);
+        else img.classList.add('ready');
+      });
       const snap = document.createElement('div');
       snap.className = 'snap';
       const scale = state.slides[file]?.scale;
@@ -2049,7 +2042,13 @@
       markSaved(); await applyState(0); renderVersions();
     })();
     applyTheme(); applyCover(); applyOpts(); buildThemeUi();
-    fetch('photos.json').then(r => r.json()).then(async list => {
+    fetch('jons-choice.json').then(r => (r.ok ? r.json() : null)).catch(() => null).then(async data => { // Jon's arrangement is the default show
+      if (data && data.v === 1) {
+        BASE = normalize(data);
+        if (!currentVersion() && !isDirty()) { state = defaults(); markSaved(); applyTheme(); applyCover(); applyOpts(); buildThemeUi(); setLoopUi(); }
+      }
+      return fetch('photos.json').then(r => r.json());
+    }).then(async list => {
       basePhotos = list; buildDefaultSongs(); await ensureBlobs(); rebuildPhotoIndex();
       buildSlides(0);
       const begin = $('begin');
