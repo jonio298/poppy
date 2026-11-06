@@ -153,13 +153,12 @@
     .topline { position:absolute; top:0; left:0; right:0; padding:calc(var(--safe-t) + 18px) clamp(18px,4vw,56px) 40px; display:flex; justify-content:space-between; gap:12px; background:linear-gradient(color-mix(in srgb, var(--bg) 85%, transparent), transparent); font:700 .7rem Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
     .controls { position:absolute; left:50%; bottom:calc(var(--safe-b) + 18px); transform:translateX(-50%); display:flex; gap:4px; padding:8px; border-radius:999px; background:color-mix(in srgb, var(--bg) 78%, transparent); border:1px solid color-mix(in srgb, var(--text) 14%, transparent); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); pointer-events:auto; }
     body.fs:not(.controls-visible):not(.editing) .controls { pointer-events:none; }
-    body.on-cover .hint, body.on-cover .topline { display:none; } /* the play controls stay on the intro slide */
+    body.on-cover .topline { display:none; } /* the play controls stay on the intro slide */
     .control { width:46px; height:46px; border:0; border-radius:50%; background:transparent; color:var(--text); cursor:pointer; display:grid; place-items:center; }
     .control svg { width:21px; height:21px; fill:currentColor; }
     .control:hover, .control:focus-visible, .control.on { background:color-mix(in srgb, var(--accent) 18%, transparent); color:var(--accent); outline:none; }
     .control[hidden] { display:none; }
     .progress { position:absolute; left:0; bottom:0; height:3px; width:0; background:linear-gradient(90deg,transparent,var(--accent)); transition:width .45s ease; }
-    .hint { position:absolute; left:clamp(22px,4vw,56px); bottom:calc(var(--safe-b) + 34px); color:var(--muted); font:600 .66rem Arial,sans-serif; letter-spacing:.09em; text-transform:uppercase; }
     .swipe-tip { position:fixed; z-index:11; left:50%; bottom:calc(var(--safe-b) + 92px); transform:translateX(-50%); padding:8px 16px; border-radius:999px; background:rgba(10,15,12,.85); color:#b9c6b2; font:600 .72rem Arial,sans-serif; letter-spacing:.1em; text-transform:uppercase; opacity:0; pointer-events:none; transition:opacity .6s; white-space:nowrap; }
     .swipe-tip.show { opacity:1; }
     .toast { position:fixed; z-index:40; left:50%; top:calc(var(--safe-t) + 16px); transform:translate(-50%,-140%); display:flex; align-items:center; gap:14px; padding:10px 12px 10px 18px; border-radius:999px; background:#1b241f; color:#f5f1e8; border:1px solid rgba(255,255,255,.14); box-shadow:0 10px 30px rgba(0,0,0,.4); font:600 .85rem Arial,sans-serif; transition:transform .35s ease; max-width:92vw; }
@@ -297,7 +296,17 @@
     .songlen span { flex:1; min-width:0; font-size:.82rem; } .songlen input { width:84px; padding:8px 10px; border:1px solid rgba(255,255,255,.16); border-radius:8px; background:#0d130f; color:#f5f1e8; font-size:16px; text-align:center; }
     body.no-tl .send, body.no-tl .sendbtn { display:none; }
     .range { display:flex; align-items:center; gap:12px; } .range input { flex:1; accent-color:#d8ba7a; height:32px; } .range output { min-width:46px; text-align:right; color:#d8ba7a; font:700 .85rem Arial,sans-serif; }
-    body.editing .controls, body.editing .hint { display:none; }
+    body.editing .controls { display:none; }
+    .helpcard { position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:4; width:min(420px, calc(100% - 24px)); padding:14px 18px 16px; border-radius:16px; background:color-mix(in srgb, var(--bg) 90%, #000); border:1px solid color-mix(in srgb, var(--text) 18%, transparent); box-shadow:0 18px 50px rgba(0,0,0,.55); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); color:var(--text); font:400 .86rem/1.3 Arial,sans-serif; pointer-events:auto; }
+    .helpcard[hidden] { display:none; }
+    body.fs .helpcard { bottom:98px; }                 /* clear of the floating control bar in full screen */
+    body.help-open .chrome { opacity:1; }               /* keep it on screen while open, even in full screen */
+    .helpcard h3 { display:flex; align-items:center; justify-content:space-between; margin:0 0 12px; color:var(--accent); font:700 .72rem Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; }
+    .helpcard h3 button { width:30px; height:30px; border:0; border-radius:50%; background:transparent; color:var(--text); font-size:1.3rem; cursor:pointer; } .helpcard h3 button:hover { color:var(--accent); }
+    .helpcard dl { display:grid; grid-template-columns:auto 1fr; gap:9px 16px; align-items:center; margin:0; }
+    .helpcard dt { display:flex; gap:4px; } .helpcard dd { margin:0; color:color-mix(in srgb, var(--text) 85%, transparent); }
+    .helpcard kbd { display:inline-block; min-width:26px; padding:3px 7px; border:1px solid color-mix(in srgb, var(--text) 30%, transparent); border-bottom-width:2px; border-radius:6px; background:color-mix(in srgb, var(--text) 9%, transparent); font:700 .72rem Arial,sans-serif; text-align:center; }
+    @media (hover:none) { #helpBtn { display:none; } }
     .endcard { position:fixed; z-index:12; left:50%; top:50%; transform:translate(-50%,-46%); opacity:0; pointer-events:none; transition:opacity .6s ease, transform .6s ease; }
     .endcard.show { opacity:1; transform:translate(-50%,-50%); pointer-events:auto; }
     .endcard button { display:flex; align-items:center; gap:12px; padding:18px 30px; border:1px solid var(--accent); border-radius:999px; background:color-mix(in srgb, var(--bg) 78%, transparent); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); color:var(--text); cursor:pointer; font:700 .9rem Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; box-shadow:0 18px 50px rgba(0,0,0,.5); }
@@ -318,7 +327,6 @@
       .rule { margin:22px auto 18px; background:linear-gradient(90deg,transparent,var(--accent),transparent); }
       .begin { margin-top:24px; width:100%; max-width:320px; }
       .eyebrow { margin-bottom:14px; }
-      .hint { display:none; }
       .topline span:first-child { display:none; }
       .topline { justify-content:center; }
       body.editing .controls { display:none; }
@@ -338,7 +346,7 @@
       h1 { font-size:2.6rem; }
       .rule { margin:16px 0; background:linear-gradient(90deg,var(--accent),transparent); }
       .begin { margin-top:16px; width:auto; }
-      .hint, .swipe-tip { display:none; }
+      .swipe-tip { display:none; }
       body.editing .stage, body.editing .chrome { right:var(--panel-w); bottom:0; }
       .panel { top:0; left:auto; width:var(--panel-w); height:auto; border-radius:0; border-top:0; border-left:1px solid rgba(255,255,255,.14); transform:translateX(102%); }
     }
@@ -367,7 +375,6 @@
   <div class="chrome" aria-label="Slideshow controls">
     <div class="topline"><span id="topTitle">In Loving Memory · Charles Ross</span><span id="counter">Opening</span></div>
     <button class="homebtn" id="homeBtn" type="button" aria-label="Home: back to the opening slide" title="Home: back to the opening slide"><svg viewBox="0 0 24 24"><path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg></button>
-    <div class="hint">Arrow keys to navigate · Space to pause · R to restart · F for full screen · E to edit · Esc for the main page</div>
     <div class="controls">
       <button class="control" id="previous" aria-label="Previous photo"><svg viewBox="0 0 24 24"><path d="M15.4 5.4 14 4 6 12l8 8 1.4-1.4L8.8 12z"/></svg></button>
       <button class="control" id="playPause" aria-label="Play slideshow"></button>
@@ -375,9 +382,23 @@
       <button class="control" id="restart" aria-label="Restart slideshow" title="Restart slideshow"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg></button>
       <button class="control" id="loopBtn" aria-label="Auto-scroll: loop continuously" aria-pressed="false" title="Auto-scroll: loop continuously"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z"/></svg></button>
       <button class="control" id="edit" aria-label="Edit mode" title="Edit mode"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75zM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z"/></svg></button>
+      <button class="control" id="helpBtn" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)"><svg viewBox="0 0 24 24"><path d="M20 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zM11 8h2v2h-2zm0 3h2v2h-2zM8 8h2v2H8zm0 3h2v2H8zM7 13H5v-2h2zm0-3H5V8h2zm9 7H8v-2h8zm0-4h-2v-2h2zm0-3h-2V8h2zm3 3h-2v-2h2zm0-3h-2V8h2z"/></svg></button>
       <button class="control" id="fullscreen" aria-label="Enter full screen"><svg viewBox="0 0 24 24"><path d="M4 4h6v2H6v4H4zm10 0h6v6h-2V6h-4zM4 14h2v4h4v2H4zm14 0h2v6h-6v-2h4z"/></svg></button>
     </div>
     <div class="progress" id="progress"></div>
+    <div class="helpcard" id="helpCard" role="dialog" aria-label="Keyboard shortcuts" hidden>
+      <h3><span>Keyboard shortcuts</span><button id="helpClose" type="button" aria-label="Close shortcuts">×</button></h3>
+      <dl>
+        <dt><kbd>←</kbd><kbd>→</kbd></dt><dd>Previous / next photo</dd>
+        <dt><kbd>Space</kbd></dt><dd>Play / pause</dd>
+        <dt><kbd>R</kbd></dt><dd>Restart from the intro slide</dd>
+        <dt><kbd>F</kbd></dt><dd>Full screen</dd>
+        <dt><kbd>E</kbd></dt><dd>Edit mode on / off</dd>
+        <dt><kbd>Esc</kbd></dt><dd>Stop and go back to the intro slide</dd>
+        <dt><kbd>Ctrl</kbd><kbd>S</kbd></dt><dd>Save (in Edit mode)</dd>
+        <dt><kbd>?</kbd></dt><dd>Show or hide this list</dd>
+      </dl>
+    </div>
   </div>
   <div class="swipe-tip" id="swipeTip">Swipe to move through photos</div>
   <div class="endcard" id="endCard"><button id="endRestart" type="button"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg> Restart slideshow</button></div>
@@ -1462,7 +1483,7 @@
     }
     function thumbBtn(file, label, cls) {
       const b = document.createElement('button');
-      b.type = 'button'; b.className = `thumb ${cls || ''}`;
+      b.type = 'button'; b.className = `thumb ${cls || ''}`; b.dataset.file = file;
       b.innerHTML = `<img loading="lazy" decoding="async" alt="" draggable="false" src="${thumbOf(file)}"><b>${label}</b>`;
       return b;
     }
@@ -1785,13 +1806,15 @@
     ['dragleave', 'drop'].forEach(t => document.addEventListener(t, e => { if (t === 'dragleave' && e.relatedTarget) return; $('panel').classList.remove('drop'); }));
     document.addEventListener('drop', e => { if (isEditing() && e.dataTransfer?.files?.length) { e.preventDefault(); addPhotos(e.dataTransfer.files); } });
 
-    // ---- Hover a thumbnail to see it at 200% (mouse only; touch screens have no hover) ----
+    // ---- Hover a thumbnail to see it at 400% (mouse only; touch screens have no hover) ----
     const zoomEl = document.createElement('div');
     zoomEl.className = 'thumbzoom'; zoomEl.setAttribute('aria-hidden', 'true'); zoomEl.innerHTML = '<img alt="">';
     document.body.append(zoomEl);
     const ZOOM_SELECTOR = '#slideList .item img, #gridDeleted .thumb img';
     let zoomTimer;
-    const hideZoom = () => { clearTimeout(zoomTimer); zoomEl.classList.remove('show'); };
+    const hideZoom = () => { clearTimeout(zoomTimer); zoomTarget = null; zoomEl.classList.remove('show'); };
+    const ZOOM = 4; // 400%
+    let zoomTarget = null;
     document.addEventListener('mouseover', e => {
       const img = matchMedia('(hover: hover)').matches && e.target.closest?.(ZOOM_SELECTOR);
       if (!img) return;
@@ -1800,19 +1823,37 @@
       clearTimeout(zoomTimer);
       zoomTimer = setTimeout(() => {
         if (dragging()) return;
-        const r = img.getBoundingClientRect(), w = r.width * 2, h = r.height * 2;
-        zoomEl.firstChild.src = img.currentSrc || img.src;
-        zoomEl.style.width = `${w}px`; zoomEl.style.height = `${h}px`;
-        zoomEl.style.left = `${Math.max(8, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 8))}px`;   // centred on the thumbnail, kept on screen
-        zoomEl.style.top = `${Math.max(8, Math.min(r.top + r.height / 2 - h / 2, innerHeight - h - 8))}px`;
+        const r = img.getBoundingClientRect(), file = img.closest('[data-file]')?.dataset.file;
+        const place = ar => { // up to 4x the thumbnail's box, shaped like the photo itself, centred on the thumbnail, never bigger than the window
+          const boxW = Math.min(r.width * ZOOM, innerWidth - 16), boxH = Math.min(r.height * ZOOM, innerHeight - 16);
+          const w = Math.min(boxW, boxH * ar), h = w / ar;
+          zoomEl.style.width = `${w}px`; zoomEl.style.height = `${h}px`;
+          zoomEl.style.left = `${Math.max(8, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 8))}px`;
+          zoomEl.style.top = `${Math.max(8, Math.min(r.top + r.height / 2 - h / 2, innerHeight - h - 8))}px`;
+        };
+        place(img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : r.width / r.height);
+        const pic = zoomEl.firstChild; zoomTarget = img;
+        pic.src = img.currentSrc || img.src;                 // the thumbnail straight away...
+        const big = file ? srcOf(file) : '';
+        if (big) { const hi = new Image(); hi.onload = () => { if (zoomTarget === img && zoomEl.classList.contains('show')) { place(hi.naturalWidth / hi.naturalHeight); pic.src = big; } }; hi.src = big; } // ...then the full-size photo as soon as it arrives
         zoomEl.classList.add('show');
-      }, 100);
+      }, 120);
     });
     document.addEventListener('mouseout', e => { if (e.target.closest?.(ZOOM_SELECTOR)) hideZoom(); });
     ['scroll', 'wheel', 'pointerdown', 'keydown'].forEach(t => document.addEventListener(t, hideZoom, true));
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => selectTab(t.dataset.tab)));
     $('modePlay').onclick = () => closePanel(true);
     $('saveBtn').onclick = commit;
+    // Keyboard shortcuts card (the ? button, or the ? key)
+    const helpCard = $('helpCard');
+    function toggleHelp(open = helpCard.hidden) {
+      helpCard.hidden = !open; document.body.classList.toggle('help-open', open);
+      if (open) wake();
+    }
+    $('helpBtn').addEventListener('click', () => toggleHelp());
+    $('helpClose').addEventListener('click', () => toggleHelp(false));
+    document.addEventListener('pointerdown', e => { if (!helpCard.hidden && !e.target.closest('#helpCard, #helpBtn')) toggleHelp(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !helpCard.hidden) { toggleHelp(false); e.stopImmediatePropagation(); } }, true); // Esc closes the card first
     $('homeBtn').addEventListener('click', goHome); // back to the opening slide (and stop, like Esc)
     $('resetTop').onclick = resetClick;
     $('edit').onclick = () => (isEditing() ? closePanel() : openPanel());
@@ -1861,6 +1902,7 @@
       else if (event.key.toLowerCase() === 'e') (isEditing() ? closePanel() : openPanel());
       else if (event.key === 'Escape') { if (isEditing()) closePanel(); else if (!document.fullscreenElement) goHome(); }
       else if (event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.metaKey) restart();
+      else if (event.key === '?') toggleHelp();
       else if (event.key === 'Home') show(0);
       else if (event.key === 'End') show(slides.length - 1);
       wake();
