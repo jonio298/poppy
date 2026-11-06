@@ -6,7 +6,8 @@ A full-screen photo slideshow created in loving memory of Charles “Charlie” 
 
 **Play mode** is the clean slideshow.
 - Tap or click **Begin slideshow** to start. It begins on the opening slide (“In Loving Memory”), which stays for 12 seconds (adjustable on the Show tab) before the photos start. The photos are timed evenly across the 22:24 playlist by default.
-- **Phones:** swipe left/right to change photos, tap to show or hide the controls.
+- **Controls:** the play/pause bar stays at the bottom center, on the intro slide too, whenever the page is not full screen. In full screen it disappears and comes back when you move the mouse (or tap on a phone).
+- **Phones:** swipe left/right to change photos.
 - **Home:** the house button at the upper left of the slideshow goes back to the opening slide and stops, like Esc.
 - **Keyboard:** arrow keys to move, space to pause, **R** to restart, **F** for full screen, **E** to switch to Edit mode, **Esc** to leave full screen and pause; press **Esc** again (outside full screen) to go back to the opening page, where Edit mode is.
 - **Restart:** the ↻ button (or **R**) starts over from the first photo. When the show ends, a **Restart slideshow** button appears.

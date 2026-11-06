@@ -114,7 +114,7 @@
     @keyframes fxSwirl { from { opacity:0; transform:rotate(-9deg) scale(1.4); } to { opacity:1; transform:none; } }
 
     /* ---------- Cover ---------- */
-    .cover { grid-template-columns:minmax(300px,.9fr) minmax(340px,.75fr); gap:clamp(32px,6vw,92px); padding:clamp(38px,7vw,110px); background:radial-gradient(circle at 24% 80%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 40%), radial-gradient(circle at 50% 35%, var(--glow) 0, var(--bg) 66%); }
+    .cover { grid-template-columns:minmax(300px,.9fr) minmax(340px,.75fr); gap:clamp(32px,6vw,92px); padding:clamp(38px,7vw,110px); padding-bottom:max(clamp(38px,7vw,110px), 108px); background:radial-gradient(circle at 24% 80%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 40%), radial-gradient(circle at 50% 35%, var(--glow) 0, var(--bg) 66%); }
     .cover-copy { align-self:center; max-width:650px; animation:rise 1.6s ease both; }
     .eyebrow { margin:0 0 24px; color:var(--accent); font-size:clamp(1.05rem,2vw,1.6rem); font-weight:700; letter-spacing:.04em; }
     h1 { margin:0; color:var(--text); font-size:clamp(3.2rem,7vw,6.5rem); font-weight:400; line-height:.98; }
@@ -131,11 +131,11 @@
 
     /* ---------- Controls ---------- */
     .chrome { z-index:10; pointer-events:none; opacity:0; transition:opacity .35s ease, right .35s ease; }
-    body.controls-visible .chrome, body.editing .chrome { opacity:1; }
+    body.controls-visible .chrome, body.editing .chrome, body:not(.fs) .chrome { opacity:1; }
     .homebtn { position:absolute; z-index:3; left:clamp(12px,3vw,24px); top:calc(var(--safe-t) + 12px); width:42px; height:42px; display:grid; place-items:center; border:1px solid color-mix(in srgb, var(--text) 20%, transparent); border-radius:50%; background:color-mix(in srgb, var(--bg) 72%, transparent); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); color:var(--text); cursor:pointer; pointer-events:auto; }
     .homebtn svg { width:20px; height:20px; fill:currentColor; }
     .homebtn:hover, .homebtn:focus-visible { color:var(--accent); border-color:var(--accent); outline:none; }
-    body:not(.controls-visible):not(.editing) .homebtn { pointer-events:none; }
+    body.fs:not(.controls-visible):not(.editing) .homebtn { pointer-events:none; }
     body.on-cover .homebtn { display:none; }
     .topline span:first-child { margin-left:54px; }
     .suggestrow { padding:0 18px 8px; }
@@ -143,8 +143,8 @@
     .suggestbtn:hover { background:rgba(216,186,122,.12); }
     .topline { position:absolute; top:0; left:0; right:0; padding:calc(var(--safe-t) + 18px) clamp(18px,4vw,56px) 40px; display:flex; justify-content:space-between; gap:12px; background:linear-gradient(color-mix(in srgb, var(--bg) 85%, transparent), transparent); font:700 .7rem Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
     .controls { position:absolute; left:50%; bottom:calc(var(--safe-b) + 18px); transform:translateX(-50%); display:flex; gap:4px; padding:8px; border-radius:999px; background:color-mix(in srgb, var(--bg) 78%, transparent); border:1px solid color-mix(in srgb, var(--text) 14%, transparent); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); pointer-events:auto; }
-    body:not(.controls-visible):not(.editing) .controls { pointer-events:none; }
-    body.on-cover .controls, body.on-cover .hint, body.on-cover .topline { display:none; }
+    body.fs:not(.controls-visible):not(.editing) .controls { pointer-events:none; }
+    body.on-cover .hint, body.on-cover .topline { display:none; } /* the play controls stay on the intro slide */
     .control { width:46px; height:46px; border:0; border-radius:50%; background:transparent; color:var(--text); cursor:pointer; display:grid; place-items:center; }
     .control svg { width:21px; height:21px; fill:currentColor; }
     .control:hover, .control:focus-visible, .control.on { background:color-mix(in srgb, var(--accent) 18%, transparent); color:var(--accent); outline:none; }
@@ -300,7 +300,7 @@
       body.editing .stage, body.editing .chrome { right:0; bottom:var(--panel-h); }
       .panel { top:auto; left:0; width:auto; height:var(--panel-h); border-left:0; border-top:1px solid rgba(255,255,255,.14); border-radius:18px 18px 0 0; transform:translateY(102%); box-shadow:0 -10px 40px rgba(0,0,0,.45); }
       .panel-head { padding-top:10px; }
-      .cover { grid-template-columns:1fr; grid-template-rows:minmax(0,1fr) auto; text-align:center; gap:18px; padding:calc(var(--safe-t) + 28px) 24px calc(var(--safe-b) + 32px); }
+      .cover { grid-template-columns:1fr; grid-template-rows:minmax(0,1fr) auto; text-align:center; gap:18px; padding:calc(var(--safe-t) + 28px) 24px calc(var(--safe-b) + 112px); }
       .cover-copy { order:2; align-self:start; }
       .portrait { order:1; height:100%; min-height:0; max-height:46dvh; align-self:end; }
       .rule { margin:22px auto 18px; background:linear-gradient(90deg,transparent,var(--accent),transparent); }
@@ -321,7 +321,7 @@
       .caption { font-size:.88rem; max-height:60px; }
       .controls { left:auto; right:14px; transform:none; bottom:10px; }
       .control { width:42px; height:42px; }
-      .cover { grid-template-columns:1fr 1fr; padding:20px 32px; gap:24px; text-align:left; }
+      .cover { grid-template-columns:1fr 1fr; padding:20px 32px 76px; gap:24px; text-align:left; }
       .portrait { height:80dvh; max-height:none; }
       h1 { font-size:2.6rem; }
       .rule { margin:16px 0; background:linear-gradient(90deg,var(--accent),transparent); }
