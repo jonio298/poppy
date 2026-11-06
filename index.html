@@ -647,7 +647,7 @@
       v: 1,
       theme: { preset: 'forest', bg: null, accent: null, font: 'classic' },
       cover: { eyebrow: 'In Loving Memory', title: 'Charles Ross', names: '“Charlie”   “Dad”   “Poppy”' },
-      opts: { timeline: true, tx: 'random', style: 'auto', cutoff: 1990, motion: 'classic', size: 99, film: true, loop: false, seconds: 12, coverSeconds: 12, filter: 'default' },
+      opts: { timeline: true, tx: 'random', style: 'auto', cutoff: 1990, motion: 'classic', size: 99, film: true, loop: false, seconds: 0, coverSeconds: 12, filter: 'default' },
       slides: {}, order: [], deleted: [], custom: [], songMap: {}, songLens: {}, songOrder: [1, 2, 3, 4, 5, 6, 7],
     });
     let state = defaults();
@@ -937,18 +937,24 @@
 
     // ---- Songs: every slide belongs to one song; a song's slides share its running time ----
     let defaultSongMap = {};
+    const SLIDE_SECS = 12; // aim: every slide about this long, so a song holds about its length / 12 slides
+    let capBonus = {}; // a slide or two of extra room so every photo has a home
+    const songCap = k => Math.max(1, Math.round(recSecs(k) / SLIDE_SECS)) + (state.songLens[k] > 0 ? 0 : capBonus[k] || 0);
     function buildDefaultSongs() {
-      // Photos tagged with a "song" in photos.json (e.g. the dancing / wedding / party ones for "In the Mood") go to that song.
-      // The rest are shared out, in order, across the songs in proportion to each song's length, after allowing for the tagged ones.
-      const total = SONGS.reduce((a, x) => a + x.secs, 0), n = basePhotos.length;
-      const tagged = p => p.song >= 1 && p.song <= SONGS.length;
-      const hinted = basePhotos.filter(tagged), rest = basePhotos.filter(p => !tagged(p));
-      const taggedPer = SONGS.map(x => hinted.filter(p => p.song === x.n).length);
-      const room = SONGS.map((x, i) => Math.max(0, n * x.secs / total - taggedPer[i])), roomSum = room.reduce((a, b) => a + b, 0) || 1;
+      // Each song takes only as many photos as fit its length (about 12s each). Photos tagged with a "song" in photos.json
+      // (the dancing / wedding / party ones for "In the Mood") go to that song while it has room; the rest are shared out in order.
+      const n = basePhotos.length, caps = SONGS.map(x => Math.max(1, Math.round(x.secs / SLIDE_SECS)));
+      capBonus = {};
+      while (caps.reduce((a, c) => a + c, 0) < n) { let j = 0; SONGS.forEach((x, i) => { if (x.secs / caps[i] > SONGS[j].secs / caps[j]) j = i; }); caps[j]++; capBonus[j + 1] = (capBonus[j + 1] || 0) + 1; }
+      const kept = SONGS.map(() => 0), rest = []; defaultSongMap = {};
+      basePhotos.forEach(p => {
+        const t = p.song >= 1 && p.song <= SONGS.length ? p.song : 0;
+        if (t && kept[t - 1] < caps[t - 1]) { kept[t - 1]++; defaultSongMap[p.file] = t; } else rest.push(p);
+      });
+      const room = caps.map((c, i) => c - kept[i]), roomSum = room.reduce((a, b) => a + b, 0) || 1;
       const raw = room.map(r => r * rest.length / roomSum), counts = raw.map(Math.floor);
       const left = rest.length - counts.reduce((a, b) => a + b, 0);
       raw.map((r, i) => [r - Math.floor(r), i]).sort((a, b) => b[0] - a[0]).slice(0, left).forEach(([, i]) => { counts[i]++; });
-      defaultSongMap = {}; hinted.forEach(p => { defaultSongMap[p.file] = p.song; });
       let idx = 0;
       counts.forEach((c, si) => { for (let j = 0; j < c; j++) defaultSongMap[rest[idx++].file] = si + 1; });
     }
@@ -1384,10 +1390,11 @@
       list.innerHTML = '';
       tl.secs.forEach(sec => {
         const b = document.createElement('button');
-        b.type = 'button'; b.className = 'sm-item' + (sec.n === here ? ' here' : ''); b.style.setProperty('--sc', sec.color);
+        const full = isFull(sec.n, file);
+        b.type = 'button'; b.className = 'sm-item' + (sec.n === here ? ' here' : '') + (full ? ' full' : ''); b.style.setProperty('--sc', sec.color);
         b.innerHTML = '<i></i><span><b></b><small></small></span>';
         b.querySelector('b').textContent = `${sec.pos} · ${sec.title}`;
-        b.querySelector('small').textContent = `${sec.artist} · ${fmtDur(sec.secs)} · ${sec.files.length} slide${sec.files.length === 1 ? '' : 's'}${sec.per ? ` · ${sec.per.toFixed(1)}s each` : ''}${sec.n === here ? ' · it’s here now' : ''}`;
+        b.querySelector('small').textContent = `${sec.artist} · ${fmtDur(sec.secs)} · ${sec.files.length} slide${sec.files.length === 1 ? '' : 's'}${sec.per ? ` · ${sec.per.toFixed(1)}s each` : ''}${sec.n === here ? ' · it’s here now' : full ? ' · full' : ` · room for ${Math.max(0, songCap(sec.n) - sec.files.length)} more`}`;
         b.onclick = () => { closeSendMenu(); sendTo(file, sec.n); };
         list.append(b);
       });
@@ -1400,7 +1407,10 @@
     }
     document.addEventListener('pointerdown', e => { if (!sendMenu.hidden && !e.target.closest('#sendMenu, .send, #sendTo')) closeSendMenu(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !sendMenu.hidden) { closeSendMenu(); e.stopImmediatePropagation(); } }, true);
+    const isFull = (k, file) => songOf(file) !== k && timeline().byId[k].files.length >= songCap(k);
+    function fullToast(k) { const sec = timeline().byId[k]; toast(`“${sec.title}” is full: its ${fmtDur(sec.secs)} fits ${songCap(k)} slides at about ${SLIDE_SECS}s each. Take one out first, or send this one to another song.`); }
     function sendTo(file, k, where = 'end', refocus = false) {
+      if (isFull(k, file)) { fullToast(k); renderList(); return; }
       const prev = { order: [...state.order], map: { ...state.songMap }, at: files.indexOf(file) + 1 };
       const kp = songPos(k), cur = files.filter(f => f !== file), songs = cur.map(f => songPos(songOf(f))), last = songs.lastIndexOf(kp);
       let idx;
@@ -1495,15 +1505,15 @@
         li.className = 'item'; li.dataset.file = f; li.dataset.index = i + 1;
         if (state.opts.timeline) { li.style.setProperty('--sc', SONGS[songOf(f) - 1].color); li.dataset.song = songOf(f); if (collapsed.has(songOf(f))) li.classList.add('folded'); }
         li.innerHTML = `<button class="grip" type="button" aria-label="Move slide ${i + 1} (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><img loading="lazy" decoding="async" alt="" draggable="false" src="${thumbOf(f)}"><div class="info"><b><i>${i + 1}</i> · </b><small></small></div><div class="rowacts"><button class="rowbtn send" type="button" aria-label="Send slide ${i + 1} to a song" title="Send to a song">${ICON_NOTE}</button><button class="rowbtn" type="button" aria-label="Edit slide ${i + 1}">${ICON_PEN}</button><button class="del" type="button" aria-label="Delete slide ${i + 1}">${ICON_X}</button></div>`;
-        li.querySelector('b').append(document.createTextNode(dateOf(f) || 'No date'));
+        li.querySelector('b').append(document.createTextNode([dateOf(f) || 'No date', byFile[f].short].filter(Boolean).join(' · ')));
         li.querySelector('small').textContent = (isOwn(f) ? 'Your photo · ' : '') + (captionOf(f) || byFile[f].caption || '').replace(/\s+/g, ' ').trim();
         return li;
       };
       const makeHeader = sec => {
         const h = document.createElement('li'), n = sec.files.length;
         h.className = 'sec'; h.dataset.song = sec.n; h.style.setProperty('--sc', sec.color);
-        const fast = n && sec.per && sec.per < 5, slow = n && sec.per > 30;
-        if (!n || fast || slow) h.classList.add('warn');
+        const cap = songCap(sec.n), over = n > cap, fast = n && sec.per && sec.per < 5, slow = n && sec.per > 30;
+        if (!n || fast || slow || over) h.classList.add('warn');
         h.innerHTML = `<button class="grip secgrip" type="button" aria-label="Move this song with all its slides (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><span class="num"></span><div class="nm"><b></b><small></small></div><button class="durchip" type="button"></button><span class="chev" aria-hidden="true"></span>`;
         const folded = collapsed.has(sec.n);
         h.classList.toggle('collapsed', folded); h.tabIndex = 0; h.setAttribute('role', 'button'); h.setAttribute('aria-expanded', String(!folded));
@@ -1514,7 +1524,7 @@
         chip.title = state.songLens[sec.n] > 0 ? `Length changed (the recording is ${fmtDur(SONGS[sec.n - 1].secs)}). Click to edit.` : 'Click to change this song’s length';
         chip.onclick = e => { e.stopPropagation(); editSongLength(chip, sec); };
         h.querySelector('b').textContent = `${sec.title} — ${sec.artist}`;
-        h.querySelector('small').textContent = `${fmtDur(sec.start)} → ${fmtDur(sec.start + sec.secs)} · ${n} slide${n === 1 ? '' : 's'}`
+        h.querySelector('small').textContent = `${fmtDur(sec.start)} → ${fmtDur(sec.start + sec.secs)} · ${n} of ${cap} slide${cap === 1 ? '' : 's'}${over ? ` (${n - cap} too many)` : n === cap ? ' (full)' : ''}`
           + (!n ? ' · no photos yet' : sec.per ? ` · ${sec.per.toFixed(1)}s each${fast ? ' (very fast)' : slow ? ' (very slow)' : ''}` : ' · custom times');
         h.onclick = e => { if (justDragged || e.target.closest('.secgrip, .durchip, .durinput')) return; toggleSong(sec.n); };
         h.onkeydown = e => { if (e.target.closest('.secgrip, .durchip, .durinput')) return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSong(sec.n); } };
@@ -1747,6 +1757,11 @@
             if (state.opts.timeline && song !== songOf(f)) { if (song === (defaultSongMap[f] || SONGS.length)) delete map[f]; else map[f] = song; }
           }
         });
+        if (state.opts.timeline) { // a song can't take more slides than fit its length
+          const cnt = (m, k) => order.filter(f => (Number(m[f]) || defaultSongMap[f] || SONGS.length) === k).length;
+          const full = SONGS.find(sg => cnt(map, sg.n) > songCap(sg.n) && cnt(map, sg.n) > cnt(state.songMap, sg.n));
+          if (full) { fullToast(full.n); return renderList(); }
+        }
         if (order.join('\n') !== files.join('\n') || JSON.stringify(map) !== JSON.stringify(state.songMap)) { state.songMap = map; applyOrder(order); } else renderList();
       };
       window.addEventListener('pointermove', move);
