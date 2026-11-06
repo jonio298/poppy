@@ -135,6 +135,8 @@
     .rule { width:92px; height:1px; margin:32px 0 26px; background:linear-gradient(90deg,var(--accent),transparent); }
     .names { margin:0; color:color-mix(in srgb, var(--text) 88%, transparent); font-size:clamp(1.1rem,2vw,1.65rem); font-style:italic; white-space:pre-wrap; word-spacing:.2em; }
     .portrait { width:100%; height:min(78dvh,760px); object-fit:contain; filter:drop-shadow(0 24px 60px rgba(0,0,0,.5)); animation:rise 2.2s ease both; }
+    .madeby { position:absolute; right:clamp(14px,3vw,28px); bottom:calc(var(--safe-b) + 58px); margin:0; color:var(--text); opacity:.42; font:italic .74rem/1.2 var(--font, Georgia, serif); letter-spacing:.04em; pointer-events:none; }
+    body.fs .madeby { bottom:calc(var(--safe-b) + 16px); }
     @keyframes rise { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
     .begin { margin-top:38px; min-height:48px; padding:14px 28px; border:1px solid color-mix(in srgb, var(--accent) 75%, transparent); border-radius:999px; background:color-mix(in srgb, var(--accent) 10%, transparent); color:var(--text); cursor:pointer; font:700 .82rem Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; transition:background .25s,color .25s; }
     .begin:hover:not(:disabled), .begin:focus-visible { background:var(--accent); color:var(--bg); outline:none; }
@@ -417,6 +419,7 @@
         <button class="begin" id="begin" disabled>Loading photos…</button>
       </div>
       <img class="portrait" src="photos/098_UNDATED_Charlie Portrait.webp" alt="Portrait of Charles Ross">
+      <p class="madeby">Made with care by Jonathan Shelley</p>
     </section>
   </main>
 
