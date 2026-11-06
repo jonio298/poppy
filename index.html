@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0e1511">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>In Loving Memory of Charles Ross</title>
   <style>
     :root {
@@ -22,6 +25,9 @@
     html, body { width:100%; height:100%; margin:0; overflow:hidden; background:var(--bg); overscroll-behavior:none; }
     body { font-family:var(--font); color:var(--text); touch-action:pan-y pinch-zoom; }
     button, input, select, textarea { font:inherit; }
+    html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+    button, .tab, .seg, .btn, .navbtn, .control, .reload-toggle, .item { touch-action:manipulation; } /* no double-tap zoom or tap delay */
+    .stage { touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; } /* swipes on the show belong to the show, not the browser */
 
     .stage, .chrome { position:fixed; inset:0; transition:right .35s ease, bottom .35s ease; }
     .stage { background:radial-gradient(circle at 50% 30%, var(--glow) 0, var(--bg) 66%); }
@@ -367,12 +373,13 @@
 
     /* ---------- Phones ---------- */
     @media (max-width:760px) {
-      :root { --padx:8px; }
+      :root { --padx:30px; } /* room for the tilt of a Polaroid and its shadow */
       .slide.has-caption { --reserve:calc(170px + var(--safe-t) + var(--safe-b)); }
       body.editing .stage, body.editing .chrome { right:0; bottom:var(--panel-h); }
       .panel { top:auto; left:0; width:auto; height:var(--panel-h); border-left:0; border-top:1px solid rgba(255,255,255,.14); border-radius:18px 18px 0 0; transform:translateY(102%); box-shadow:0 -10px 40px rgba(0,0,0,.45); }
       .panel-head { padding-top:10px; }
-      .cover { grid-template-columns:1fr; grid-template-rows:minmax(0,1fr) auto; text-align:center; gap:18px; padding:calc(var(--safe-t) + 28px) 24px calc(var(--safe-b) + 32px); }
+      .cover { grid-template-columns:1fr; grid-template-rows:minmax(0,1fr) auto; text-align:center; gap:18px; padding:calc(var(--safe-t) + 28px) 24px calc(var(--safe-b) + 58px); }
+      .madeby { right:0; left:0; text-align:center; bottom:calc(var(--safe-b) + 12px); }
       .cover-copy { order:2; align-self:start; }
       .portrait { order:1; height:100%; min-height:0; max-height:46dvh; align-self:end; }
       .rule { margin:22px auto 18px; background:linear-gradient(90deg,transparent,var(--accent),transparent); }
@@ -384,6 +391,18 @@
       body.editing .meta { bottom:14px; }
       body.editing .slide { --reserve:24px; }
       body.editing .slide.has-caption { --reserve:130px; }
+    }
+    @media (max-width:520px) {
+      .rowacts { grid-template-columns:repeat(2, 40px); gap:5px; }
+      .rowacts .rowbtn, .rowacts .del { height:36px; border-radius:18px; }
+      .seg { padding:11px 16px; }
+      .reload-toggle { padding:8px 6px 8px 11px; }
+      .linkbtn { padding:10px 6px; }
+      .durchip { padding:8px 11px; }
+      .btn { min-height:42px; }
+      .navbtn { width:48px; height:48px; }
+      .item { padding:6px 4px 6px 2px; }
+      .toast { max-width:calc(100vw - 24px); }
     }
     @media (max-height:520px) and (orientation:landscape) {
       :root { --reserve:20px; --panel-w:330px; }
@@ -429,6 +448,10 @@
     .tab:active { transform:translateY(1px); }
     .tab:focus-visible { outline:2px solid var(--accent, #d8ba7a); outline-offset:2px; }
     .tab[aria-selected="true"] { color:#0b1018; border-color:var(--accent, #d8ba7a); background:var(--accent, #d8ba7a); box-shadow:0 0 0 1px color-mix(in srgb, var(--accent, #d8ba7a) 40%, transparent), 0 4px 14px color-mix(in srgb, var(--accent, #d8ba7a) 35%, transparent); }
+    @media (max-width:520px) { /* phones: one row of five */
+      .tabs { flex-wrap:nowrap; gap:4px; padding:8px 8px 10px; }
+      .tab { flex:1 1 0; padding:6px 1px; min-height:42px; display:grid; place-items:center; font-size:.58rem; letter-spacing:.02em; line-height:1.12; white-space:normal; }
+    }
 </style>
 </head>
 <body class="controls-visible on-cover">
@@ -1216,7 +1239,7 @@
       }
     }
     const STRIP = /\b(active|leaving|entering|fx-\w+)\b/g;
-    function show(index, { instant = false } = {}) {
+    function show(index, { instant = false, fx: forceFx } = {}) {
       const previous = current;
       $('endCard').classList.remove('show');
       current = Math.max(0, Math.min(index, slides.length - 1));
@@ -1232,7 +1255,7 @@
         incoming.className = incoming.className.replace(STRIP, '').replace(/\s+/g, ' ').trim();
         void incoming.offsetWidth; // restart the animation if this slide was shown before
         incoming.style.setProperty('--dir', current >= previous ? 1 : -1);
-        const fx = current === 0 ? 'fade' : effectFor(current), ms = fxMs(fx);
+        const fx = forceFx || (current === 0 ? 'fade' : effectFor(current)), ms = fxMs(fx);
         incoming.style.setProperty('--fx', `${ms}ms`);
         incoming.classList.add('active', 'entering', `fx-${fx}`);
         clearTimeout(fxTimer);
@@ -1291,6 +1314,11 @@
     document.addEventListener('visibilitychange', () => { if (playing && document.visibilityState === 'visible') keepAwake(); });
     let leavingFullscreen = false; // true when our own button (not Esc) exits full screen
     async function toggleFullscreen() {
+      if (!document.documentElement.requestFullscreen && !document.documentElement.webkitRequestFullscreen) { // iPhone Safari: no real full screen, so just clear the chrome away
+        const on = !document.body.classList.contains('fs');
+        document.body.classList.toggle('fs', on); fullscreenBtn.setAttribute('aria-label', on ? 'Exit full screen' : 'Enter full screen');
+        return;
+      }
       try {
         if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
         else { leavingFullscreen = true; await document.exitFullscreen?.(); }
@@ -2207,21 +2235,34 @@
     }
     document.addEventListener('mousemove', () => wake());
 
-    // Touch: swipe to change photos, tap to show or hide the controls.
-    let touchStart = null;
-    stage.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') touchStart = { x: e.clientX, y: e.clientY, t: Date.now() }; });
-    stage.addEventListener('pointerup', e => {
-      if (!touchStart || e.pointerType !== 'touch') return;
-      const dx = e.clientX - touchStart.x, dy = e.clientY - touchStart.y, dt = Date.now() - touchStart.t;
-      touchStart = null;
-      if (e.target.closest('button, .caption')) return;
-      if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4 && current > 0) { show(current + (dx < 0 ? 1 : -1)); navFeedback(); }
-      else if (Math.abs(dx) < 10 && Math.abs(dy) < 10 && dt < 400 && current > 0 && !isEditing()) {
+    // Touch: swipe to change slides (a quick flick or a longer drag), tap to show or hide the controls.
+    let touch = null;
+    const SWIPE_IGNORE = '.panel, .controls, .nowplaying, .topline .homebtn, .homebtn, .customize, .begin, button, input, select, textarea, a';
+    const isStageTouch = el => !!el && !el.closest?.(SWIPE_IGNORE);
+    document.addEventListener('touchstart', e => {
+      if (e.touches.length !== 1 || !isStageTouch(e.target) || !stage.contains(e.target)) { touch = null; return; }
+      const t = e.touches[0]; touch = { x: t.clientX, y: t.clientY, t: performance.now(), dx: 0, dy: 0, swiping: false };
+    }, { passive: true });
+    document.addEventListener('touchmove', e => {
+      if (!touch) return;
+      const t = e.touches[0]; touch.dx = t.clientX - touch.x; touch.dy = t.clientY - touch.y;
+      if (!touch.swiping && Math.abs(touch.dx) > 12 && Math.abs(touch.dx) > Math.abs(touch.dy) * 1.2) touch.swiping = true;
+      if (touch.swiping && e.cancelable) e.preventDefault(); // a sideways swipe never scrolls or zooms the page
+    }, { passive: false });
+    document.addEventListener('touchend', e => {
+      if (!touch) return;
+      const { dx, dy, t } = touch, dt = Math.max(1, performance.now() - t), swiping = touch.swiping;
+      touch = null;
+      const fast = Math.abs(dx) / dt > 0.3 && Math.abs(dx) > 24;      // a flick
+      if (swiping && (Math.abs(dx) > 56 || fast)) {
+        const to = Math.max(0, Math.min(slides.length - 1, current + (dx < 0 ? 1 : -1)));
+        if (to !== current) { show(to, { fx: 'slide' }); navFeedback(); }
+      } else if (!swiping && Math.abs(dx) < 10 && Math.abs(dy) < 10 && dt < 400 && current > 0 && !isEditing()) {
         if (document.body.classList.contains('controls-visible')) { clearTimeout(controlsTimer); document.body.classList.remove('controls-visible'); }
         else wake(4500);
       }
-    });
-    stage.addEventListener('pointercancel', () => { touchStart = null; });
+    }, { passive: true });
+    document.addEventListener('touchcancel', () => { touch = null; }, { passive: true });
     document.querySelector('.chrome').addEventListener('pointerdown', () => wake(4500));
 
     function tip() {
