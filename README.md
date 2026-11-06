@@ -18,6 +18,15 @@ A full-screen photo slideshow created in loving memory of Charles “Charlie” 
 - **Theme:** colour presets (or any background/accent colour) and font.
 - **Versions:** every **Save** keeps a dated, timed version here. **Open** one to edit it (it then opens on reload), **Rename**, **Download** it (with your own photos inside) or **Delete** it. The original slideshow is always listed too.
 
+## Songs and the timeline
+
+The slideshow is timed to seven songs (What a Wonderful World, When I Fall in Love, Only You, Can't Help Falling in Love, In the Mood, Goodnight My Love, The Prayer; about 22:34 together). **This page does not play the songs.** Start them on your own device; the page shows which song each slide belongs to and times the slides to match.
+
+- Edit mode → **Slides** tab: a colored timeline bar (with a marker for the selected slide) and a colored section for each song showing its time range, how many slides it has and how many seconds each slide gets.
+- **Send to a song:** the ♪ button on any slide in the list, or **Send to…** at the top of the Slide tab, moves a slide into a song. You can also drag a slide into another song's section.
+- **Now playing:** outside full screen, a bar under the slideshow shows the current song, its artist and the time within it (“Up next” on the opening slide, “Paused on” when paused).
+- **Show** tab → **Songs:** turn the song timing on or off and change a song's length if your recording is a different length.
+
 ## Look
 
 By default the transitions are shuffled randomly (never the same one twice in a row; each slide can be assigned its own). Older photos (before 1990, adjustable on the Show tab) get a Polaroid look and newer ones rotate through thin white, rounded white, gold frame and cream mat borders. Every photo sits over a blurred copy of itself, a slow Ken Burns zoom and drift, and a subtle vintage film finish (grain, vignette, warm tone). Photos are shown as large as fit the screen and are never cropped, and the Ken Burns motion never pushes a photo past the screen edge.

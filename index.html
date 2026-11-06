@@ -26,6 +26,22 @@
     .stage, .chrome { position:fixed; inset:0; transition:right .35s ease, bottom .35s ease; }
     .stage { background:radial-gradient(circle at 50% 30%, var(--glow) 0, var(--bg) 66%); }
     body.editing .stage, body.editing .chrome { right:var(--panel-w); }
+    /* "Now playing" bar under the slideshow (hidden in full screen) */
+    :root { --np-h:0px; }
+    body:not(.fs) { --np-h:calc(46px + var(--safe-b)); }
+    body:not(.fs) .stage, body:not(.fs) .chrome { bottom:var(--np-h); --safe-b:0px; }
+    .nowplaying { position:fixed; left:0; right:0; bottom:0; z-index:15; display:none; align-items:center; gap:10px; height:var(--np-h); padding:0 clamp(14px,3vw,28px) var(--safe-b); background:color-mix(in srgb, var(--bg) 92%, #000); border-top:1px solid color-mix(in srgb, var(--text) 14%, transparent); color:var(--text); font:400 .85rem/1.2 Arial,sans-serif; white-space:nowrap; overflow:hidden; transition:right .35s ease; }
+    body:not(.fs) .nowplaying { display:flex; }
+    body.editing:not(.fs) .nowplaying { right:var(--panel-w); }
+    .nowplaying[hidden] { display:none !important; }
+    .np-dot { flex:none; width:11px; height:11px; border-radius:50%; background:var(--sc,var(--accent)); box-shadow:0 0 0 3px color-mix(in srgb, var(--sc,var(--accent)) 28%, transparent); }
+    .np-state { flex:none; color:var(--muted); font:700 .66rem Arial,sans-serif; letter-spacing:.12em; text-transform:uppercase; }
+    .nowplaying b { overflow:hidden; text-overflow:ellipsis; font-weight:700; }
+    .np-artist { overflow:hidden; text-overflow:ellipsis; color:var(--muted); }
+    .np-time { flex:none; margin-left:auto; color:var(--muted); font-variant-numeric:tabular-nums; }
+    .np-bar { position:absolute; left:0; right:0; top:0; height:3px; background:color-mix(in srgb, var(--text) 12%, transparent); }
+    .np-bar i { display:block; height:100%; width:0; background:var(--sc,var(--accent)); transition:width .5s linear; }
+    @media (max-width:520px) { .np-artist { display:none; } }
 
     /* ---------- Slides ---------- */
     .slide { position:absolute; inset:0; display:grid; place-items:center; overflow:hidden; visibility:hidden; background:var(--bg); }
@@ -213,6 +229,27 @@
     .vacts { display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; } .vacts .btn { padding:8px 11px; font-size:.68rem; }
     .warn { margin:0 0 14px; padding:10px 12px; border:1px solid rgba(232,192,112,.5); border-radius:10px; background:rgba(232,192,112,.08); color:#e8c070; font-size:.8rem; }
     .drop { outline:3px dashed #d8ba7a; outline-offset:-10px; }
+    .timeline { position:relative; display:flex; gap:2px; height:32px; margin:2px 0 8px; }
+    .tseg { flex:1 1 0; min-width:0; padding:0; border:0; border-radius:6px; background:var(--sc); color:#141c17; font:700 .74rem Arial,sans-serif; cursor:pointer; }
+    .tseg:hover, .tseg:focus-visible { filter:brightness(1.12); outline:none; } .tseg.empty { opacity:.35; }
+    .tlhead { position:absolute; top:-3px; bottom:-3px; width:3px; margin-left:-1px; border-radius:2px; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.55); pointer-events:none; transition:left .3s ease; }
+    .sec { display:flex; align-items:center; gap:10px; margin:12px 0 2px; padding:9px 10px; border-radius:10px; border-left:5px solid var(--sc); background:color-mix(in srgb, var(--sc) 15%, #141c17); color:#eee9dc; font:400 .82rem/1.25 Arial,sans-serif; cursor:pointer; list-style:none; }
+    .sec .num { flex:none; display:grid; place-items:center; width:26px; height:26px; border-radius:50%; background:var(--sc); color:#141c17; font:700 .8rem Arial,sans-serif; }
+    .sec .nm { flex:1; min-width:0; } .sec b { display:block; font-size:.88rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .sec small { display:block; color:#b9c4b9; font-size:.72rem; } .sec.warn small { color:#f0c070; }
+    .item[data-file] { box-shadow:inset 4px 0 0 var(--sc, transparent); }
+    .sendbtn { width:100%; display:flex; align-items:center; text-align:left; margin-bottom:14px; border-left:5px solid var(--sc,#d8ba7a); }
+    .sendmenu { position:fixed; z-index:70; width:min(330px, calc(100vw - 16px)); max-height:calc(100dvh - 16px); overflow:auto; padding:10px; border-radius:14px; background:#1a241e; border:1px solid rgba(255,255,255,.16); box-shadow:0 18px 50px rgba(0,0,0,.55); color:#eee9dc; font:400 .85rem/1.3 Arial,sans-serif; }
+    .sendmenu[hidden] { display:none; }
+    .sm-title { margin:2px 4px 8px; color:#9bab9b; font:700 .68rem Arial,sans-serif; letter-spacing:.12em; text-transform:uppercase; }
+    .sm-item { display:flex; align-items:center; gap:10px; width:100%; margin:0 0 6px; padding:9px 10px; border:1px solid color-mix(in srgb, var(--sc) 55%, transparent); border-radius:10px; background:color-mix(in srgb, var(--sc) 14%, #1a241e); color:#eee9dc; text-align:left; cursor:pointer; }
+    .sm-item:hover, .sm-item:focus-visible { background:color-mix(in srgb, var(--sc) 30%, #1a241e); outline:none; }
+    .sm-item.here { outline:2px solid var(--sc); outline-offset:-2px; }
+    .sm-item i { flex:none; width:12px; height:36px; border-radius:6px; background:var(--sc); }
+    .sm-item b { display:block; font-size:.9rem; } .sm-item small { display:block; color:#b9c4b9; font-size:.72rem; }
+    .songlen { display:flex; align-items:center; gap:10px; margin:0 0 8px; } .songlen i { flex:none; width:10px; height:28px; border-radius:5px; background:var(--sc); }
+    .songlen span { flex:1; min-width:0; font-size:.82rem; } .songlen input { width:84px; padding:8px 10px; border:1px solid rgba(255,255,255,.16); border-radius:8px; background:#0d130f; color:#f5f1e8; font-size:16px; text-align:center; }
+    body.no-tl .send, body.no-tl .sendbtn, body.no-tl .timeline, body.no-tl #timelineNote { display:none; }
     .range { display:flex; align-items:center; gap:12px; } .range input { flex:1; accent-color:#d8ba7a; height:32px; } .range output { min-width:46px; text-align:right; color:#d8ba7a; font:700 .85rem Arial,sans-serif; }
     body.editing .controls, body.editing .hint { display:none; }
     .endcard { position:fixed; z-index:12; left:50%; top:50%; transform:translate(-50%,-46%); opacity:0; pointer-events:none; transition:opacity .6s ease, transform .6s ease; }
@@ -297,6 +334,11 @@
   </div>
   <div class="swipe-tip" id="swipeTip">Swipe to move through photos</div>
   <div class="endcard" id="endCard"><button id="endRestart" type="button"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg> Restart slideshow</button></div>
+  <div class="nowplaying" id="nowPlaying" aria-live="polite" hidden>
+    <div class="np-bar"><i id="npFill"></i></div>
+    <span class="np-dot" id="npDot"></span><span class="np-state" id="npState">Now playing</span><b id="npTitle"></b><span class="np-artist" id="npArtist"></span><span class="np-time" id="npTime"></span>
+  </div>
+  <div class="sendmenu" id="sendMenu" role="menu" aria-label="Send to a song" hidden><div class="sm-title">Send this slide to…</div><div id="sendMenuList"></div></div>
   <div class="toast" id="toast" role="status"><span id="toastMsg"></span><button id="toastUndo" type="button">Undo</button></div>
 
   <aside class="panel" id="panel" aria-label="Edit slideshow">
@@ -321,6 +363,8 @@
 
     <div class="pane" data-pane="slides">
       <p class="note">Drag any slide up or down to reorder (press and hold on a phone). Tap a slide to preview it, <b>✎</b> to edit it, or the red <b style="color:#ff6b5e">✕</b> to delete it.</p>
+      <div class="timeline" id="timeline" role="group" aria-label="Song timeline"></div>
+      <p class="note" id="timelineNote"></p>
       <button class="btn" id="addPhotos" type="button" style="width:100%;margin-bottom:12px">＋ Add my own photos</button>
       <input type="file" id="photoFile" accept="image/*" multiple hidden>
       <ul class="list" id="slideList"></ul>
@@ -344,6 +388,7 @@
       <p class="note" id="slideNone">Pick a photo in the Slides list to edit it.</p>
       <div id="slideForm">
         <p class="label" id="slideWhich">Slide 1 of 1</p>
+        <button class="btn sendbtn" id="sendTo" type="button"><span id="sendLabel">♪ Send to a song…</span></button>
         <label class="field"><span>Date label</span><input type="text" id="fDate" maxlength="40" placeholder="e.g. 1985 or Summer 1972"></label>
         <label class="field"><span>Caption (optional)</span><textarea id="fCaption" maxlength="600" placeholder="Add a memory or a few words about this photo…"></textarea></label>
         <div class="field"><span>Photo size</span>
@@ -383,6 +428,11 @@
       <label class="field"><span>Name</span><input type="text" id="fTitle" maxlength="60"></label>
       <label class="field"><span>Nicknames / tagline</span><input type="text" id="fNames" maxlength="100"></label>
       <label class="field"><span>Opening slide stays for (seconds)</span><input type="number" id="oCoverSecs" min="2" max="120" step="1" placeholder="12"></label>
+      <div class="hr"></div>
+      <span class="label">Songs</span>
+      <label class="check"><input type="checkbox" id="oTimeline"> Time the slides to the songs</label>
+      <div id="songLens"></div>
+      <p class="note" id="songNote"></p>
       <div class="hr"></div>
       <span class="label">Whole show</span>
       <label class="field"><span>Default transition</span><select id="oTx"></select></label>
@@ -455,6 +505,18 @@
         default: return ''; // 'default' / none: leave it to the vintage film look
       }
     }
+    // The playlist. Lengths come from the original recordings; they can be changed on the Show tab if a different version is used.
+    const SONGS = [
+      { n: 1, title: 'What a Wonderful World', artist: 'Louis Armstrong', secs: 141, color: '#e9b44c' },
+      { n: 2, title: 'When I Fall in Love', artist: 'Nat King Cole', secs: 190, color: '#ea7a72' },
+      { n: 3, title: 'Only You', artist: 'The Platters', secs: 156, color: '#5fb8ea' },
+      { n: 4, title: 'Can’t Help Falling in Love', artist: 'Elvis Presley', secs: 179, color: '#b190ec' },
+      { n: 5, title: 'In the Mood', artist: 'Glenn Miller Orchestra', secs: 220, color: '#66d08f' },
+      { n: 6, title: 'Goodnight My Love', artist: 'Paul Anka', secs: 199, color: '#f29cc6' },
+      { n: 7, title: 'The Prayer', artist: 'Céline Dion & Andrea Bocelli', secs: 269, color: '#f0a05a' },
+    ];
+    const fmtDur = s => { const t = Math.max(0, Math.round(s)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
+    const ICON_NOTE = '<svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3z"/></svg>';
     const ICON_PAUSE = '<svg viewBox="0 0 24 24"><path d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg>';
     const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg>';
     const $ = id => document.getElementById(id);
@@ -465,8 +527,8 @@
       v: 1,
       theme: { preset: 'forest', bg: null, accent: null, font: 'classic' },
       cover: { eyebrow: 'In Loving Memory', title: 'Charles Ross', names: '“Charlie”   “Dad”   “Poppy”' },
-      opts: { tx: 'random', style: 'auto', cutoff: 1990, motion: 'classic', size: 99, film: true, loop: false, seconds: 0, coverSeconds: 12, filter: 'default' },
-      slides: {}, order: [], deleted: [], custom: [],
+      opts: { timeline: true, tx: 'random', style: 'auto', cutoff: 1990, motion: 'classic', size: 99, film: true, loop: false, seconds: 0, coverSeconds: 12, filter: 'default' },
+      slides: {}, order: [], deleted: [], custom: [], songMap: {}, songLens: {},
     });
     let state = defaults();
     let storageOk = true;
@@ -501,6 +563,8 @@
         order: Array.isArray(s.order) ? s.order : [],
         deleted: Array.isArray(s.deleted) ? s.deleted : [],
         custom: Array.isArray(s.custom) ? s.custom.filter(c => c && typeof c.id === 'string') : [],
+        songMap: s.songMap && typeof s.songMap === 'object' && !Array.isArray(s.songMap) ? s.songMap : {},
+        songLens: s.songLens && typeof s.songLens === 'object' && !Array.isArray(s.songLens) ? s.songLens : {},
       };
     }
     // `state` is the working copy. Nothing is stored until Save is pressed; reloading always opens the version marked "Opens on reload".
@@ -510,7 +574,7 @@
     let savedJson = '', savedSnapshot = '';
     function markSaved() { savedJson = JSON.stringify(state); savedSnapshot = canon(state); }
     const isDirty = () => canon(state) !== savedSnapshot;
-    function save() { updateSaveUi(); } // called after every edit: flags it as changed
+    function save() { tlCache = null; updateSaveUi(); if (typeof updateNowPlaying === 'function' && files.length) updateNowPlaying(); } // called after every edit: flags it as changed
     function updateSaveUi() {
       const dirty = isDirty(), cv = currentVersion();
       $('saveBtn').classList.toggle('dirty', dirty);
@@ -730,10 +794,41 @@
     let slides = [$('cover')];
     let current = 0, playing = false, timer, fxTimer, wakeLock = null;
 
+    // ---- Songs: every slide belongs to one song; a song's slides share its running time ----
+    let defaultSongMap = {};
+    function buildDefaultSongs() { // the original photos are shared out across the songs in proportion to song length
+      const total = SONGS.reduce((a, x) => a + x.secs, 0), n = basePhotos.length;
+      const raw = SONGS.map(x => n * x.secs / total), counts = raw.map(Math.floor);
+      const left = n - counts.reduce((a, b) => a + b, 0);
+      raw.map((r, i) => [r - Math.floor(r), i]).sort((a, b) => b[0] - a[0]).slice(0, left).forEach(([, i]) => { counts[i]++; });
+      defaultSongMap = {}; let idx = 0;
+      counts.forEach((c, si) => { for (let j = 0; j < c; j++) defaultSongMap[basePhotos[idx++].file] = si + 1; });
+    }
+    const songOf = f => Math.min(SONGS.length, Math.max(1, Number(state.songMap[f]) || defaultSongMap[f] || SONGS.length)); // photos added later start in the last song
+    const songSecs = k => (state.songLens[k] > 0 ? Number(state.songLens[k]) : SONGS[k - 1].secs);
+    let tlCache = null;
+    function timeline() { // the songs laid over the current slide order
+      if (tlCache) return tlCache;
+      const secs = SONGS.map(x => ({ ...x, secs: songSecs(x.n), files: [], start: 0, per: 0 }));
+      files.forEach(f => secs[songOf(f) - 1].files.push(f));
+      let start = 0;
+      secs.forEach(sec => {
+        sec.start = start; start += sec.secs;
+        const own = f => (state.slides[f]?.seconds > 0 ? state.slides[f].seconds : 0);
+        const fixed = sec.files.reduce((a, f) => a + own(f), 0), free = sec.files.filter(f => !own(f)).length;
+        sec.per = free ? Math.max(1, (sec.secs - fixed) / free) : 0;
+      });
+      tlCache = { secs, total: start };
+      return tlCache;
+    }
+    function offsetInSong(i) { const k = songOf(files[i - 1]); let t = 0; for (let j = 1; j < i; j++) if (songOf(files[j - 1]) === k) t += slideMs(j) / 1000; return t; }
+    const slideStartSecs = i => timeline().secs[songOf(files[i - 1]) - 1].start + offsetInSong(i);
+
     function computeFiles() {
       const known = state.order.filter(f => byFile[f]);
       const rest = photos.map(p => p.file).filter(f => !known.includes(f));
-      return [...known, ...rest].filter(f => !state.deleted.includes(f));
+      const list = [...known, ...rest].filter(f => !state.deleted.includes(f));
+      return state.opts.timeline ? list.sort((a, b) => songOf(a) - songOf(b)) : list; // sections stay together (the sort is stable)
     }
     const edit = f => state.slides[f] || (state.slides[f] = {});
     const dateOf = f => { const e = state.slides[f]; return e && e.date !== undefined ? e.date : (byFile[f].date || ''); };
@@ -759,7 +854,10 @@
     function intervalMs() { return state.opts.seconds > 0 ? state.opts.seconds * 1000 : PLAYLIST_DURATION / Math.max(1, files.length); }
     function slideMs(i) {
       if (i === 0) return (state.opts.coverSeconds > 0 ? state.opts.coverSeconds : 12) * 1000; // the opening slide has its own time
-      const n = state.slides[files[i - 1]]?.seconds; return n > 0 ? n * 1000 : intervalMs();
+      const f = files[i - 1], n = state.slides[f]?.seconds;
+      if (n > 0) return n * 1000;
+      if (state.opts.timeline) { const sec = timeline().secs[songOf(f) - 1]; if (sec.per) return Math.round(sec.per * 1000); }
+      return intervalMs();
     }
 
     let lastFx = null;
@@ -835,6 +933,7 @@
     }
 
     function buildSlides(focusIndex) {
+      tlCache = null;
       files = computeFiles();
       slides.slice(1).forEach(s => s.remove());
       const frag = document.createDocumentFragment();
@@ -893,6 +992,7 @@
       }
       slides[current]?.querySelector('.fig')?.style.setProperty('--kb-dur', `${Math.round(slideMs(current) + 2600)}ms`);
       updateBegin();
+      slideStart = performance.now(); updateNowPlaying();
       counter.textContent = current === 0 ? 'Opening' : `${current} / ${slides.length - 1}`;
       progress.style.width = slides.length > 1 ? `${(current / (slides.length - 1)) * 100}%` : '0';
       if (playing) schedule();
@@ -920,12 +1020,12 @@
     // The Begin button goes away once the show is running, and returns if it stops while on the opening slide.
     function updateBegin() { $('begin').classList.toggle('gone', playing && current === 0); }
     function play() {
-      playing = true; updateBegin();
+      playing = true; updateBegin(); slideStart = performance.now(); updateNowPlaying();
       playPause.innerHTML = ICON_PAUSE; playPause.setAttribute('aria-label', 'Pause slideshow');
       keepAwake(); schedule();
     }
     function pause() {
-      playing = false; clearTimeout(timer); updateBegin();
+      playing = false; clearTimeout(timer); updateBegin(); updateNowPlaying();
       wakeLock?.release?.().catch(() => {}); wakeLock = null;
       playPause.innerHTML = ICON_PLAY; playPause.setAttribute('aria-label', 'Play slideshow');
     }
@@ -945,6 +1045,7 @@
     }
     document.addEventListener('fullscreenchange', () => {
       const on = !!document.fullscreenElement;
+      document.body.classList.toggle('fs', on); // the Now playing bar is only shown outside full screen
       fullscreenBtn.setAttribute('aria-label', on ? 'Exit full screen' : 'Enter full screen');
       if (!on) { // Esc (or the browser) left full screen: stop the show where it is
         if (!leavingFullscreen && playing) { pause(); toast('Paused — press ▶ to keep going'); }
@@ -972,6 +1073,7 @@
       document.querySelector('meta[name=theme-color]').content = bg;
     }
     function applyOpts() {
+      document.body.classList.toggle('no-tl', !state.opts.timeline);
       document.documentElement.style.setProperty('--up', state.opts.size);
       document.body.classList.toggle('film-on', !!state.opts.film);
     }
@@ -1040,12 +1142,28 @@
     $('cBg').addEventListener('input', e => { state.theme.bg = e.target.value; applyTheme(); save(); });
     $('cAccent').addEventListener('input', e => { state.theme.accent = e.target.value; applyTheme(); save(); });
 
+    function renderSongLens() {
+      const box = $('songLens'); if (!box) return;
+      if (box.contains(document.activeElement)) return; // don't disturb typing
+      box.innerHTML = '';
+      SONGS.forEach(sg => {
+        const row = document.createElement('label'); row.className = 'songlen'; row.style.setProperty('--sc', sg.color);
+        row.innerHTML = '<i></i><span></span><input type="text" inputmode="numeric" aria-label="Length">';
+        row.querySelector('span').textContent = `${sg.n} · ${sg.title}`;
+        const input = row.querySelector('input'); input.dataset.song = sg.n; input.value = fmtDur(songSecs(sg.n));
+        box.append(row);
+      });
+      const total = SONGS.reduce((a, sg) => a + songSecs(sg.n), 0);
+      $('songNote').textContent = `Together ${fmtDur(total)}. Lengths are from the original recordings (the original slideshow was timed to 22:24); change one if your copy of the song is a different length.`;
+    }
     function syncShow() {
       $('fEyebrow').value = state.cover.eyebrow; $('fTitle').value = state.cover.title; $('fNames').value = state.cover.names;
       $('oTx').value = state.opts.tx; $('oStyle').value = state.opts.style; $('oMotion').value = state.opts.motion; $('oSize').value = String(state.opts.size); $('oFilm').checked = state.opts.film; $('oLoop').checked = !!state.opts.loop; $('oCutoff').value = state.opts.cutoff; $('oCoverSecs').value = state.opts.coverSeconds || 12; $('oFilter').value = state.opts.filter || 'default';
+      $('oTimeline').checked = !!state.opts.timeline; renderSongLens();
+      $('oSeconds').disabled = !!state.opts.timeline;
       $('oSeconds').value = state.opts.seconds || '';
       $('oSeconds').placeholder = `Auto (${(PLAYLIST_DURATION / 1000 / Math.max(1, files.length)).toFixed(1)}s)`;
-      $('secondsNote').textContent = state.opts.seconds
+      $('secondsNote').textContent = state.opts.timeline ? 'Set by the songs while “Time the slides to the songs” is on.' : state.opts.seconds
         ? `${files.length} photos × ${state.opts.seconds}s ≈ ${Math.round(files.length * state.opts.seconds / 60)} min. Clear the box to fit the original 22:24 length.`
         : `Automatic: ${files.length} photos spread over the original 22:24 length.`;
     }
@@ -1064,8 +1182,78 @@
       const fa = e.filterAmt ?? 100; $('fFilterAmt').value = fa; $('fFilterAmtOut').textContent = `${fa}%`;
       $('fFilterAmtWrap').hidden = !filterCss(slideFilter(f).name, 100);
       if (document.activeElement !== $('fSeconds')) $('fSeconds').value = e.seconds || '';
+      const sk = songOf(f), ss = SONGS[sk - 1], sec = timeline().secs[sk - 1];
+      $('sendTo').style.setProperty('--sc', ss.color);
+      $('sendLabel').textContent = `♪ Song ${sk} · ${ss.title} — Send to…`;
+      $('fSeconds').placeholder = state.opts.timeline && sec.per ? `From the song: ${sec.per.toFixed(1)}s` : 'Same as the rest of the show';
       $('moveEarlier').disabled = current <= 1; $('moveLater').disabled = current >= files.length;
     }
+    // ---- "Now playing" bar ----
+    let slideStart = 0;
+    function updateNowPlaying() {
+      const bar = $('nowPlaying');
+      if (!state.opts.timeline || !files.length) { bar.hidden = true; return; }
+      bar.hidden = false;
+      const tl = timeline();
+      let sec, elapsed = 0, label;
+      if (current === 0) { sec = tl.secs.find(x => x.files.length) || tl.secs[0]; label = 'Up next'; }
+      else {
+        sec = tl.secs[songOf(files[current - 1]) - 1];
+        label = playing ? 'Now playing' : 'Paused on';
+        elapsed = Math.min(sec.secs, offsetInSong(current) + (playing ? (performance.now() - slideStart) / 1000 : 0));
+      }
+      bar.style.setProperty('--sc', sec.color);
+      $('npState').textContent = label;
+      $('npTitle').textContent = `${sec.n} · ${sec.title}`;
+      $('npArtist').textContent = sec.artist;
+      $('npTime').textContent = `${fmtDur(elapsed)} / ${fmtDur(sec.secs)}`;
+      $('npFill').style.width = `${Math.min(100, (elapsed / sec.secs) * 100)}%`;
+    }
+    setInterval(() => { if (playing) updateNowPlaying(); }, 500);
+
+    // ---- Send a slide to a song ----
+    const sendMenu = $('sendMenu');
+    const closeSendMenu = () => { sendMenu.hidden = true; };
+    function openSendMenu(file, anchor) {
+      if (!file || !state.opts.timeline) return;
+      const tl = timeline(), here = songOf(file), list = $('sendMenuList');
+      list.innerHTML = '';
+      tl.secs.forEach(sec => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'sm-item' + (sec.n === here ? ' here' : ''); b.style.setProperty('--sc', sec.color);
+        b.innerHTML = '<i></i><span><b></b><small></small></span>';
+        b.querySelector('b').textContent = `${sec.n} · ${sec.title}`;
+        b.querySelector('small').textContent = `${sec.artist} · ${fmtDur(sec.secs)} · ${sec.files.length} slide${sec.files.length === 1 ? '' : 's'}${sec.per ? ` · ${sec.per.toFixed(1)}s each` : ''}${sec.n === here ? ' · it’s here now' : ''}`;
+        b.onclick = () => { closeSendMenu(); sendTo(file, sec.n); };
+        list.append(b);
+      });
+      sendMenu.hidden = false;
+      const r = anchor.getBoundingClientRect(), w = sendMenu.offsetWidth, h = sendMenu.offsetHeight;
+      let top = r.bottom + 6; if (top + h > innerHeight - 8) top = Math.max(8, r.top - h - 6);
+      sendMenu.style.left = `${Math.max(8, Math.min(r.right - w, innerWidth - w - 8))}px`;
+      sendMenu.style.top = `${Math.max(8, Math.min(top, innerHeight - h - 8))}px`;
+      sendMenu.querySelector('.sm-item.here, .sm-item')?.focus();
+    }
+    document.addEventListener('pointerdown', e => { if (!sendMenu.hidden && !e.target.closest('#sendMenu, .send, #sendTo')) closeSendMenu(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !sendMenu.hidden) { closeSendMenu(); e.stopImmediatePropagation(); } }, true);
+    function sendTo(file, k, where = 'end', refocus = false) {
+      const prev = { order: [...state.order], map: { ...state.songMap }, at: files.indexOf(file) + 1 };
+      const cur = files.filter(f => f !== file), songs = cur.map(songOf), last = songs.lastIndexOf(k);
+      let idx;
+      if (last >= 0) idx = where === 'end' ? last + 1 : songs.indexOf(k);
+      else { const nxt = songs.findIndex(x => x > k); idx = nxt < 0 ? cur.length : nxt; }
+      cur.splice(idx, 0, file);
+      const map = { ...state.songMap };
+      if (k === (defaultSongMap[file] || SONGS.length)) delete map[file]; else map[file] = k;
+      state.songMap = map; state.order = cur; save();
+      buildSlides(cur.indexOf(file) + 1); renderList();
+      if (refocus) listEl.querySelector(`.item[data-file="${CSS.escape(file)}"] .grip`)?.focus();
+      const sec = timeline().secs[k - 1];
+      toast(`Sent to ♪ ${k} · ${sec.title}: now ${sec.files.length} slide${sec.files.length === 1 ? '' : 's'}${sec.per ? `, ${sec.per.toFixed(1)}s each` : ''}.`, () => {
+        state.order = prev.order; state.songMap = prev.map; save(); buildSlides(prev.at); renderList();
+      });
+    }
+
     function syncPanel() {
       if (!isEditing()) return;
       if (activeTab() === 'slide') syncSlide();
@@ -1087,14 +1275,33 @@
       cover.querySelector('small').textContent = `${state.cover.eyebrow} · ${state.cover.title}`;
       cover.onclick = e => { show(0, { instant: true }); if (e.target.closest('.rowbtn')) selectTab('show'); };
       listEl.append(cover);
-      files.forEach((f, i) => {
+      const makeRow = (f, i) => {
         const li = document.createElement('li');
         li.className = 'item'; li.dataset.file = f; li.dataset.index = i + 1;
-        li.innerHTML = `<button class="grip" type="button" aria-label="Move slide ${i + 1} (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><img loading="lazy" decoding="async" alt="" src="${thumbOf(f)}"><div class="info"><b><i>${i + 1}</i> · </b><small></small></div><button class="rowbtn" type="button" aria-label="Edit slide ${i + 1}">${ICON_PEN}</button><button class="del" type="button" aria-label="Delete slide ${i + 1}">${ICON_X}</button>`;
+        if (state.opts.timeline) li.style.setProperty('--sc', SONGS[songOf(f) - 1].color);
+        li.innerHTML = `<button class="grip" type="button" aria-label="Move slide ${i + 1} (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><img loading="lazy" decoding="async" alt="" src="${thumbOf(f)}"><div class="info"><b><i>${i + 1}</i> · </b><small></small></div><button class="rowbtn send" type="button" aria-label="Send slide ${i + 1} to a song" title="Send to a song">${ICON_NOTE}</button><button class="rowbtn" type="button" aria-label="Edit slide ${i + 1}">${ICON_PEN}</button><button class="del" type="button" aria-label="Delete slide ${i + 1}">${ICON_X}</button>`;
         li.querySelector('b').append(document.createTextNode(dateOf(f) || 'No date'));
         li.querySelector('small').textContent = (isOwn(f) ? 'Your photo · ' : '') + (captionOf(f) || byFile[f].caption || '').replace(/\s+/g, ' ').trim();
-        listEl.append(li);
-      });
+        return li;
+      };
+      const makeHeader = sec => {
+        const h = document.createElement('li'), n = sec.files.length;
+        h.className = 'sec'; h.dataset.song = sec.n; h.style.setProperty('--sc', sec.color);
+        const fast = n && sec.per && sec.per < 5, slow = n && sec.per > 30;
+        if (!n || fast || slow) h.classList.add('warn');
+        h.innerHTML = '<span class="num"></span><div class="nm"><b></b><small></small></div>';
+        h.querySelector('.num').textContent = sec.n;
+        h.querySelector('b').textContent = `${sec.title} — ${sec.artist}`;
+        h.querySelector('small').textContent = `${fmtDur(sec.start)} → ${fmtDur(sec.start + sec.secs)} · ${n} slide${n === 1 ? '' : 's'}`
+          + (!n ? ' · no photos yet' : sec.per ? ` · ${sec.per.toFixed(1)}s each${fast ? ' (very fast)' : slow ? ' (very slow)' : ''}` : ' · custom times');
+        h.onclick = () => { if (n) show(files.indexOf(sec.files[0]) + 1, { instant: true }); };
+        return h;
+      };
+      if (state.opts.timeline) {
+        let n = 0;
+        timeline().secs.forEach(sec => { listEl.append(makeHeader(sec)); sec.files.forEach(f => listEl.append(makeRow(f, n++))); });
+      } else files.forEach((f, i) => listEl.append(makeRow(f, i)));
+      renderTimeline();
       const gone = state.deleted.filter(f => byFile[f]);
       $('deletedBox').hidden = gone.length === 0;
       const del = $('gridDeleted'); del.innerHTML = '';
@@ -1102,7 +1309,28 @@
       pane.scrollTop = top;
       markNow();
     }
+    function renderTimeline() {
+      const el = $('timeline'); el.innerHTML = '';
+      if (!state.opts.timeline) { $('timelineNote').textContent = ''; return; }
+      const tl = timeline();
+      tl.secs.forEach(sec => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'tseg' + (sec.files.length ? '' : ' empty'); b.style.setProperty('--sc', sec.color); b.style.flexGrow = sec.secs; b.textContent = sec.n;
+        b.title = `${sec.title} — ${sec.artist} · ${fmtDur(sec.secs)} · ${sec.files.length} slides`;
+        b.onclick = () => { if (sec.files.length) show(files.indexOf(sec.files[0]) + 1, { instant: true }); listEl.querySelector(`.sec[data-song="${sec.n}"]`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }); };
+        el.append(b);
+      });
+      const head = document.createElement('div'); head.className = 'tlhead'; head.id = 'tlHead'; el.append(head);
+      updateTimelineHead();
+    }
+    function updateTimelineHead() {
+      const head = $('tlHead'); if (!head || !state.opts.timeline || !files.length) return;
+      const tl = timeline(), t = current === 0 ? 0 : slideStartSecs(current);
+      head.style.left = `${(t / tl.total) * 100}%`;
+      $('timelineNote').textContent = `${current === 0 ? 'Opening slide' : `Slide ${current} starts at ${fmtDur(t)}`} · ${fmtDur(tl.total)} of music · ${files.length} slides. (This page doesn’t play audio: start the songs on your device.)`;
+    }
     function markNow() {
+      updateTimelineHead();
       let nowEl = null;
       listEl.querySelectorAll('.item').forEach(li => { const on = Number(li.dataset.index) === current; li.classList.toggle('now', on); if (on) nowEl = li; });
       if (nowEl && activeTab() === 'slides') nowEl.scrollIntoView({ block: 'nearest' });
@@ -1118,6 +1346,7 @@
       const li = e.target.closest('.item[data-file]'); if (!li || justDragged) return;
       const idx = Number(li.dataset.index);
       if (e.target.closest('.del')) return deleteSlideAt(idx);
+      if (e.target.closest('.send')) return openSendMenu(li.dataset.file, e.target.closest('.send'));
       if (e.target.closest('.rowbtn')) { show(idx, { instant: true }); return selectTab('slide'); }
       if (e.target.closest('.grip')) return;
       show(idx, { instant: true });
@@ -1160,7 +1389,7 @@
       const move = ev => {
         lastY = ev.clientY;
         ghost.style.top = `${ev.clientY - offY}px`;
-        const others = [...listEl.querySelectorAll('.item[data-file]:not(.placeholder)')];
+        const others = [...listEl.children].filter(el => el !== li && !el.classList.contains('cover-row')); // slides and song headers
         const before = others.find(it => { const r = it.getBoundingClientRect(); return ev.clientY < r.top + r.height / 2; });
         if (before) { if (li.nextElementSibling !== before) listEl.insertBefore(li, before); } else listEl.append(li);
       };
@@ -1178,8 +1407,16 @@
         window.removeEventListener('touchmove', noScroll);
         justDragged = true; setTimeout(() => { justDragged = false; }, 120);
         ghost.remove(); li.classList.remove('placeholder');
-        const order = [...listEl.querySelectorAll('.item[data-file]')].map(x => x.dataset.file);
-        if (order.join('\n') !== files.join('\n')) applyOrder(order); else renderList();
+        const order = [], map = { ...state.songMap };
+        let song = 1;
+        [...listEl.children].forEach(el => {
+          if (el.classList.contains('sec')) song = Number(el.dataset.song);
+          else if (el.dataset.file) {
+            const f = el.dataset.file; order.push(f);
+            if (state.opts.timeline && song !== songOf(f)) { if (song === (defaultSongMap[f] || SONGS.length)) delete map[f]; else map[f] = song; }
+          }
+        });
+        if (order.join('\n') !== files.join('\n') || JSON.stringify(map) !== JSON.stringify(state.songMap)) { state.songMap = map; applyOrder(order); } else renderList();
       };
       window.addEventListener('pointermove', move);
       window.addEventListener('pointerup', done);
@@ -1196,6 +1433,7 @@
     function moveAt(i, dir) {
       const j = i + dir;
       if (j < 1 || j > files.length) return;
+      if (state.opts.timeline && songOf(files[i - 1]) !== songOf(files[j - 1])) return sendTo(files[i - 1], songOf(files[j - 1]), dir < 0 ? 'end' : 'start', true);
       const order = [...files]; [order[i - 1], order[j - 1]] = [order[j - 1], order[i - 1]];
       applyOrder(order, files[i - 1]);
     }
@@ -1285,6 +1523,20 @@
     $('oMotion').addEventListener('change', e => { state.opts.motion = e.target.value; save(); buildSlides(current); });
     $('oSize').addEventListener('change', e => { state.opts.size = parseFloat(e.target.value); save(); applyOpts(); });
     $('oCoverSecs').addEventListener('input', e => { const n = parseInt(e.target.value, 10); state.opts.coverSeconds = n >= 2 && n <= 120 ? n : 12; save(); if (playing && current === 0) schedule(); });
+    $('oTimeline').addEventListener('change', e => {
+      const cf = files[current - 1];
+      state.opts.timeline = e.target.checked; save(); applyOpts();
+      buildSlides(cf ? computeFiles().indexOf(cf) + 1 : 0); renderList(); syncShow();
+    });
+    $('songLens').addEventListener('change', e => {
+      const inp = e.target.closest('input[data-song]'); if (!inp) return;
+      const k = Number(inp.dataset.song), m = inp.value.trim().match(/^(\d+):([0-5]?\d)$/);
+      const secs = m ? Number(m[1]) * 60 + Number(m[2]) : parseInt(inp.value, 10);
+      if (secs >= 10 && secs <= 1200) { if (secs === SONGS[k - 1].secs) delete state.songLens[k]; else state.songLens[k] = secs; save(); }
+      inp.value = fmtDur(songSecs(k)); // snap a bad entry back to the real value
+      renderSongLens(); renderList(); updateNowPlaying();
+    });
+    $('sendTo').addEventListener('click', e => openSendMenu(files[current - 1], e.currentTarget));
     $('oLoop').addEventListener('change', e => setLoop(e.target.checked));
     $('oCutoff').addEventListener('input', e => { const n = parseInt(e.target.value, 10); if (n >= 1900 && n <= 2100) { state.opts.cutoff = n; save(); buildSlides(current); } });
     $('oFilm').addEventListener('change', e => { state.opts.film = e.target.checked; save(); applyOpts(); });
@@ -1293,7 +1545,7 @@
       state.opts.seconds = n >= 2 && n <= 120 ? n : 0; save(); syncShow2();
     });
     function syncShow2() { // update only the note while typing so the field keeps focus
-      $('secondsNote').textContent = state.opts.seconds
+      $('secondsNote').textContent = state.opts.timeline ? 'Set by the songs while “Time the slides to the songs” is on.' : state.opts.seconds
         ? `${files.length} photos × ${state.opts.seconds}s ≈ ${Math.round(files.length * state.opts.seconds / 60)} min. Clear the box to fit the original 22:24 length.`
         : `Automatic: ${files.length} photos spread over the original 22:24 length.`;
     }
@@ -1362,7 +1614,7 @@
     })();
     applyTheme(); applyCover(); applyOpts(); buildThemeUi();
     fetch('photos.json').then(r => r.json()).then(async list => {
-      basePhotos = list; await ensureBlobs(); rebuildPhotoIndex();
+      basePhotos = list; buildDefaultSongs(); await ensureBlobs(); rebuildPhotoIndex();
       buildSlides(0);
       const begin = $('begin');
       begin.disabled = false; begin.textContent = 'Begin slideshow';
