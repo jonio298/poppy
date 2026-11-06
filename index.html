@@ -30,7 +30,7 @@
     :root { --np-h:0px; }
     body:not(.fs) { --np-h:calc(46px + var(--safe-b)); }
     body:not(.fs) .stage, body:not(.fs) .chrome { bottom:var(--np-h); --safe-b:0px; }
-    .nowplaying { position:fixed; left:0; right:0; bottom:0; z-index:15; display:none; align-items:center; gap:10px; height:var(--np-h); padding:0 clamp(14px,3vw,28px) var(--safe-b); background:color-mix(in srgb, var(--bg) 92%, #000); border-top:1px solid color-mix(in srgb, var(--text) 14%, transparent); color:var(--text); font:400 .85rem/1.2 Arial,sans-serif; white-space:nowrap; overflow:hidden; transition:right .35s ease; }
+    .nowplaying { position:fixed; left:0; right:0; bottom:0; z-index:9; display:none; align-items:center; justify-content:space-between; gap:10px; height:var(--np-h); padding:0 clamp(14px,3vw,28px) var(--safe-b); background:color-mix(in srgb, var(--bg) 92%, #000); border-top:1px solid color-mix(in srgb, var(--text) 14%, transparent); color:var(--text); font:400 .85rem/1.2 Arial,sans-serif; white-space:nowrap; overflow:hidden; transition:right .35s ease; }
     body:not(.fs) .nowplaying { display:flex; }
     body.editing:not(.fs) .nowplaying { right:var(--panel-w); }
     .nowplaying[hidden] { display:none !important; }
@@ -42,6 +42,17 @@
     .np-bar { position:absolute; left:0; right:0; top:0; height:3px; background:color-mix(in srgb, var(--text) 12%, transparent); }
     .np-bar i { display:block; height:100%; width:0; background:var(--sc,var(--accent)); transition:width .5s linear; }
     @media (max-width:520px) { .np-artist { display:none; } }
+    .np-left { display:flex; align-items:center; gap:10px; min-width:0; max-width:calc(50% - 170px); overflow:hidden; }
+    /* Outside full screen the play controls live IN the bottom bar, centred. In full screen they float and hide as before. */
+    body:not(.fs) .controls { position:fixed; z-index:16; left:50%; bottom:env(safe-area-inset-bottom,0px); height:46px; padding:0; gap:2px; border:0; border-radius:0; background:none; -webkit-backdrop-filter:none; backdrop-filter:none; transform:translateX(-50%); align-items:center; }
+    body:not(.fs) .control { width:40px; height:40px; }
+    @media (max-width:700px) and (min-height:521px) { /* phones: info on the first row, controls on the second */
+      body:not(.fs) { --np-h:calc(92px + var(--safe-b)); }
+      .nowplaying { flex-wrap:wrap; align-content:flex-start; }
+      .np-left { flex:1 1 0; max-width:none; height:46px; }
+      .np-time { height:46px; display:flex; align-items:center; margin-left:auto; }
+    }
+    @media (max-height:520px) { .np-state, .np-artist { display:none; } }
 
     /* ---------- Slides ---------- */
     .slide { position:absolute; inset:0; display:grid; place-items:center; overflow:hidden; visibility:hidden; background:var(--bg); }
@@ -114,7 +125,7 @@
     @keyframes fxSwirl { from { opacity:0; transform:rotate(-9deg) scale(1.4); } to { opacity:1; transform:none; } }
 
     /* ---------- Cover ---------- */
-    .cover { grid-template-columns:minmax(300px,.9fr) minmax(340px,.75fr); gap:clamp(32px,6vw,92px); padding:clamp(38px,7vw,110px); padding-bottom:max(clamp(38px,7vw,110px), 108px); background:radial-gradient(circle at 24% 80%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 40%), radial-gradient(circle at 50% 35%, var(--glow) 0, var(--bg) 66%); }
+    .cover { grid-template-columns:minmax(300px,.9fr) minmax(340px,.75fr); gap:clamp(32px,6vw,92px); padding:clamp(38px,7vw,110px); padding-bottom:max(clamp(38px,7vw,110px), 84px); background:radial-gradient(circle at 24% 80%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 40%), radial-gradient(circle at 50% 35%, var(--glow) 0, var(--bg) 66%); }
     .cover-copy { align-self:center; max-width:650px; animation:rise 1.6s ease both; }
     .eyebrow { margin:0 0 24px; color:var(--accent); font-size:clamp(1.05rem,2vw,1.6rem); font-weight:700; letter-spacing:.04em; }
     h1 { margin:0; color:var(--text); font-size:clamp(3.2rem,7vw,6.5rem); font-weight:400; line-height:.98; }
@@ -138,9 +149,6 @@
     body.fs:not(.controls-visible):not(.editing) .homebtn { pointer-events:none; }
     body.on-cover .homebtn { display:none; }
     .topline span:first-child { margin-left:54px; }
-    .suggestrow { padding:0 18px 8px; }
-    .suggestbtn { width:100%; display:flex; align-items:center; justify-content:center; gap:8px; border-color:rgba(216,186,122,.6); color:#d8ba7a; }
-    .suggestbtn:hover { background:rgba(216,186,122,.12); }
     .topline { position:absolute; top:0; left:0; right:0; padding:calc(var(--safe-t) + 18px) clamp(18px,4vw,56px) 40px; display:flex; justify-content:space-between; gap:12px; background:linear-gradient(color-mix(in srgb, var(--bg) 85%, transparent), transparent); font:700 .7rem Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
     .controls { position:absolute; left:50%; bottom:calc(var(--safe-b) + 18px); transform:translateX(-50%); display:flex; gap:4px; padding:8px; border-radius:999px; background:color-mix(in srgb, var(--bg) 78%, transparent); border:1px solid color-mix(in srgb, var(--text) 14%, transparent); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); pointer-events:auto; }
     body.fs:not(.controls-visible):not(.editing) .controls { pointer-events:none; }
@@ -238,6 +246,13 @@
     .ver { display:flex; flex-direction:column; gap:6px; padding:12px; border:1px solid rgba(255,255,255,.1); border-radius:12px; background:#18221c; font:400 .85rem/1.3 Arial,sans-serif; }
     .ver.now { border-color:#d8ba7a; background:#1f2b23; }
     .vtop { display:flex; align-items:center; justify-content:space-between; gap:8px; } .vtop b { font-size:.95rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .reload-toggle { flex:none; display:flex; align-items:center; gap:8px; padding:4px 5px 4px 11px; border:1px solid rgba(255,255,255,.2); border-radius:999px; background:transparent; color:#9bab9b; font:700 .62rem Arial,sans-serif; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
+    .reload-toggle:hover, .reload-toggle:focus-visible { border-color:#d8ba7a; outline:none; }
+    .reload-toggle.on { border-color:#d8ba7a; background:rgba(216,186,122,.12); color:#d8ba7a; }
+    .rt-track { position:relative; width:32px; height:19px; border-radius:999px; background:#2c3832; transition:background .2s; }
+    .rt-track i { position:absolute; top:2.5px; left:2.5px; width:14px; height:14px; border-radius:50%; background:#9bab9b; transition:transform .2s, background .2s; }
+    .reload-toggle.on .rt-track { background:#d8ba7a; } .reload-toggle.on .rt-track i { transform:translateX(13px); background:#141c17; }
+    .vtop { flex-wrap:wrap; }
     .badge { flex:none; padding:3px 8px; border-radius:999px; background:rgba(216,186,122,.18); color:#d8ba7a; font:700 .62rem Arial,sans-serif; letter-spacing:.08em; text-transform:uppercase; }
     .vmeta { color:#9bab9b; font-size:.76rem; }
     .vacts { display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; } .vacts .btn { padding:8px 11px; font-size:.68rem; }
@@ -261,9 +276,6 @@
     .sec .secgrip { width:24px; height:30px; margin-left:-6px; }
     .sec.placeholder { opacity:.35; border-style:dashed; }
     .ghost-sec { position:fixed; z-index:60; margin:0; pointer-events:none; box-shadow:0 14px 34px rgba(0,0,0,.55); opacity:.97; }
-    .chapters { list-style:none; margin:6px 0 4px; padding:0; display:flex; flex-direction:column; gap:6px; }
-    .chapters li { padding:8px 10px; border-radius:8px; border-left:4px solid var(--sc); background:color-mix(in srgb, var(--sc) 12%, #18221c); }
-    .chapters b { display:block; font-size:.82rem; } .chapters small { display:block; margin-top:2px; color:#b9c4b9; font-size:.74rem; line-height:1.35; }
     @media (max-width:520px) { .item { gap:6px; } .rowbtn, .del { width:32px; height:32px; } .info small { white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; } }
     .sec .chev { flex:none; padding-left:4px; color:#b9c4b9; font-size:1rem; }
     .sec:focus-visible { outline:2px solid var(--sc); outline-offset:2px; }
@@ -300,7 +312,7 @@
       body.editing .stage, body.editing .chrome { right:0; bottom:var(--panel-h); }
       .panel { top:auto; left:0; width:auto; height:var(--panel-h); border-left:0; border-top:1px solid rgba(255,255,255,.14); border-radius:18px 18px 0 0; transform:translateY(102%); box-shadow:0 -10px 40px rgba(0,0,0,.45); }
       .panel-head { padding-top:10px; }
-      .cover { grid-template-columns:1fr; grid-template-rows:minmax(0,1fr) auto; text-align:center; gap:18px; padding:calc(var(--safe-t) + 28px) 24px calc(var(--safe-b) + 112px); }
+      .cover { grid-template-columns:1fr; grid-template-rows:minmax(0,1fr) auto; text-align:center; gap:18px; padding:calc(var(--safe-t) + 28px) 24px calc(var(--safe-b) + 32px); }
       .cover-copy { order:2; align-self:start; }
       .portrait { order:1; height:100%; min-height:0; max-height:46dvh; align-self:end; }
       .rule { margin:22px auto 18px; background:linear-gradient(90deg,transparent,var(--accent),transparent); }
@@ -321,7 +333,7 @@
       .caption { font-size:.88rem; max-height:60px; }
       .controls { left:auto; right:14px; transform:none; bottom:10px; }
       .control { width:42px; height:42px; }
-      .cover { grid-template-columns:1fr 1fr; padding:20px 32px 76px; gap:24px; text-align:left; }
+      .cover { grid-template-columns:1fr 1fr; padding:20px 32px 56px; gap:24px; text-align:left; }
       .portrait { height:80dvh; max-height:none; }
       h1 { font-size:2.6rem; }
       .rule { margin:16px 0; background:linear-gradient(90deg,var(--accent),transparent); }
@@ -371,7 +383,7 @@
   <div class="endcard" id="endCard"><button id="endRestart" type="button"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg> Restart slideshow</button></div>
   <div class="nowplaying" id="nowPlaying" aria-live="polite" hidden>
     <div class="np-bar"><i id="npFill"></i></div>
-    <span class="np-dot" id="npDot"></span><span class="np-state" id="npState">Now playing</span><b id="npTitle"></b><span class="np-artist" id="npArtist"></span><span class="np-time" id="npTime"></span>
+    <div class="np-left"><span class="np-dot" id="npDot"></span><span class="np-state" id="npState">Now playing</span><b id="npTitle"></b><span class="np-artist" id="npArtist"></span></div><span class="np-time" id="npTime"></span>
   </div>
   <div class="sendmenu" id="sendMenu" role="menu" aria-label="Send to a song" hidden><div class="sm-title">Send this slide to…</div><div id="sendMenuList"></div></div>
   <div class="toast" id="toast" role="status"><span id="toastMsg"></span><button id="toastUndo" type="button">Undo</button></div>
@@ -387,7 +399,6 @@
         <button class="btn small primary" id="saveBtn" type="button" title="Save this version on this device (Ctrl+S)">Save</button>
       </div>
     </div>
-    <div class="suggestrow"><button class="btn suggestbtn" id="suggestBtn" type="button" title="Open the show I designed around the songs and Poppy’s life">✦ Suggested slide show</button></div>
     <div class="savestate" id="saveState" aria-live="polite"></div>
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="slides" aria-selected="true">Slides</button>
@@ -509,13 +520,9 @@
     </div>
 
     <div class="pane" data-pane="versions" hidden>
-      <p class="note">Every time you press <b>Save</b>, a version is kept here with its date and time. The one marked <b>Opens on reload</b> is what loads when you come back to this page on this device.</p>
+      <p class="note">Every time you press <b>Save</b>, a version is kept here with its date and time. The one with <b>Opens on reload</b> switched on is what loads when you come back to this page on this device. Click a switch to turn it on or off; turn one off and the original slideshow opens instead.</p>
       <div class="warn" id="versionWarn" hidden></div>
       <ul class="list" id="versionList"></ul>
-      <div class="hr"></div>
-      <span class="label">Suggested shows</span>
-      <p class="note">Ready-made orders you can open and then change. Opening one is unsaved until you press <b>Save</b>.</p>
-      <ul class="list" id="suggestedList"></ul>
     </div>
 
     <div class="pane" data-pane="theme" hidden>
@@ -597,7 +604,8 @@
     let loadedFromLS = false;
     let needsPersist = false;
     let versions = [];       // every saved version: { id, name, savedAt, state (JSON), count, own }
-    let currentId = '';      // the version that opens on reload ('' = the original slideshow)
+    let currentId = '';      // the version on screen right now ('' = the original slideshow)
+    let reloadId = '';       // the version that opens on reload ('' = the original slideshow)
     const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
     const fmtTime = t => new Date(t).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
     const currentVersion = () => versions.find(v => v.id === currentId) || null;
@@ -609,6 +617,7 @@
         if (!versions.length && old) { versions = [{ id: uid(), name: 'Version 1', savedAt: Date.now(), state: old, count: 0, own: 0 }]; needsPersist = true; }
         const cur = localStorage.getItem(CUR_KEY);
         currentId = cur === null ? (versions.length ? versions[versions.length - 1].id : '') : cur;
+        reloadId = currentId;
         const v = currentVersion();
         if (v) state = normalize(JSON.parse(v.state));
         loadedFromLS = rawV !== null || !!old;
@@ -661,7 +670,7 @@
     function setCookie() {
       try {
         const list = versions.slice(-60).map(v => `${v.id}.${v.savedAt.toString(36)}`).join(',');
-        document.cookie = `poppy_versions=${currentId}~${list}; max-age=31536000; path=/; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
+        document.cookie = `poppy_versions=${reloadId}~${list}; max-age=31536000; path=/; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
       } catch (_) { /* cookies blocked */ }
     }
     function readCookie() {
@@ -674,8 +683,8 @@
     }
     async function persistAll() {
       let ok = true;
-      try { localStorage.setItem(VERS_KEY, JSON.stringify(versions)); localStorage.setItem(CUR_KEY, currentId); } catch (_) { ok = false; }
-      const a = await kvPut('versions', JSON.stringify(versions)), b = await kvPut('current', currentId);
+      try { localStorage.setItem(VERS_KEY, JSON.stringify(versions)); localStorage.setItem(CUR_KEY, reloadId); } catch (_) { ok = false; }
+      const a = await kvPut('versions', JSON.stringify(versions)), b = await kvPut('current', reloadId);
       setCookie();
       try { await navigator.storage?.persist?.(); } catch (_) { /* optional: asks the browser not to clear it */ }
       return ok || (a && b);
@@ -684,32 +693,48 @@
       if (!isDirty()) { const cv = currentVersion(); toast(cv ? `Already saved as “${cv.name}”. Nothing has changed.` : 'Nothing to save yet. This is still the original.'); return; }
       const nums = versions.map(v => parseInt((v.name.match(/^Version (\d+)$/) || [])[1], 10)).filter(Number.isFinite);
       const v = { id: uid(), name: `Version ${(nums.length ? Math.max(...nums) : 0) + 1}`, savedAt: Date.now(), state: JSON.stringify(state), count: files.length, own: state.custom.length };
-      const prev = currentId;
-      versions.push(v); currentId = v.id;
+      const prev = currentId, prevReload = reloadId;
+      versions.push(v); currentId = v.id; reloadId = v.id; // a fresh save opens on reload
       if (await persistAll()) {
         storageOk = true; markSaved(); updateSaveUi(); renderVersions(); gcBlobs();
         toast(`Saved as “${v.name}” on ${fmtTime(v.savedAt)}. It opens like this next time.`);
       } else {
-        versions.pop(); currentId = prev; storageOk = false; updateSaveUi();
+        versions.pop(); currentId = prev; reloadId = prevReload; storageOk = false; updateSaveUi();
         toast('This browser won’t let me save. Use “Download my version” instead.');
       }
     }
 
     // ---- Saved versions library ----
+    const reloadToggle = on => `<button class="reload-toggle${on ? ' on' : ''}" type="button" role="switch" aria-checked="${on}" data-act="reload" title="${on ? 'Click to turn off' : 'Click to open this one on reload'}"><span>Opens on reload</span><span class="rt-track"><i></i></span></button>`;
+    async function toggleReload(id) { // click a switch: on -> this one opens on reload; off -> falls back (original, or the latest save if the original was on)
+      const prev = reloadId;
+      if (reloadId !== id) reloadId = id;
+      else if (id === '') {
+        const last = versions[versions.length - 1];
+        if (!last) { toast('The original opens whenever nothing else is chosen.'); return; }
+        reloadId = last.id;
+      } else reloadId = '';
+      if (!(await persistAll())) { reloadId = prev; toast('This browser won’t let me save that choice.'); }
+      renderVersions();
+      const v = versions.find(x => x.id === reloadId);
+      if (reloadId !== prev) toast(v ? `“${v.name}” will open on reload.` : 'The original slideshow will open on reload.');
+    }
     function renderVersions() {
       const list = $('versionList'); if (!list) return;
       list.innerHTML = '';
       [...versions].reverse().forEach(v => {
-        const li = document.createElement('li'); li.className = 'ver' + (v.id === currentId ? ' now' : ''); li.dataset.id = v.id;
+        const li = document.createElement('li'); li.className = 'ver' + (v.id === reloadId ? ' now' : ''); li.dataset.id = v.id;
         li.innerHTML = '<div class="vtop"><b></b></div><div class="vmeta"></div><div class="vacts"><button class="btn" data-act="open" type="button">Open</button><button class="btn" data-act="rename" type="button">Rename</button><button class="btn" data-act="export" type="button">Download</button><button class="btn danger" data-act="del" type="button">Delete</button></div>';
         li.querySelector('b').textContent = v.name;
-        if (v.id === currentId) li.querySelector('.vtop').insertAdjacentHTML('beforeend', '<span class="badge">Opens on reload</span>');
+        li.querySelector('.vtop').insertAdjacentHTML('beforeend', reloadToggle(v.id === reloadId));
+        if (v.id === currentId) li.querySelector('b').insertAdjacentHTML('afterend', '<span class="badge">On screen</span>');
         li.querySelector('.vmeta').textContent = `${fmtTime(v.savedAt)}${v.count ? ` · ${v.count} slides` : ''}${v.own ? ` · ${v.own} of your own photos` : ''}`;
         list.append(li);
       });
-      const o = document.createElement('li'); o.className = 'ver' + (currentId === '' ? ' now' : ''); o.dataset.id = '';
+      const o = document.createElement('li'); o.className = 'ver' + (reloadId === '' ? ' now' : ''); o.dataset.id = '';
       o.innerHTML = '<div class="vtop"><b>Original slideshow</b></div><div class="vmeta">As published, with no edits</div><div class="vacts"><button class="btn" data-act="open" type="button">Open</button></div>';
-      if (currentId === '') o.querySelector('.vtop').insertAdjacentHTML('beforeend', '<span class="badge">Opens on reload</span>');
+      o.querySelector('.vtop').insertAdjacentHTML('beforeend', reloadToggle(reloadId === ''));
+      if (currentId === '') o.querySelector('b').insertAdjacentHTML('afterend', '<span class="badge">On screen</span>');
       list.append(o);
       const ck = readCookie(), have = new Set(versions.map(v => v.id));
       const missing = ck ? ck.ids.filter(x => !have.has(x)).length : 0;
@@ -721,7 +746,7 @@
       if (id && !v) return;
       if (isDirty() && !confirm('You have unsaved changes. Open this version anyway? Your unsaved changes will be lost.')) return;
       state = v ? normalize(JSON.parse(v.state)) : defaults();
-      currentId = id; markSaved(); await persistAll();
+      currentId = id; reloadId = id; markSaved(); await persistAll(); // opening one also makes it the one that opens on reload; the switch can turn that off
       await applyState(0); renderVersions();
       toast(v ? `Opened “${v.name}”. It will open this way on reload.` : 'Opened the original slideshow. It will open this way on reload.');
     }
@@ -734,6 +759,7 @@
       const v = versions.find(x => x.id === id); if (!v) return;
       if (!confirm(`Delete “${v.name}” (${fmtTime(v.savedAt)})? This can’t be undone.`)) return;
       versions = versions.filter(x => x.id !== id);
+      if (id === reloadId) reloadId = versions.length ? versions[versions.length - 1].id : '';
       if (id === currentId) { // what's on screen is no longer saved anywhere
         currentId = versions.length ? versions[versions.length - 1].id : '';
         savedJson = currentVersion() ? currentVersion().state : JSON.stringify(defaults()); savedSnapshot = '';
@@ -743,7 +769,8 @@
     $('versionList').addEventListener('click', async e => {
       const btn = e.target.closest('button[data-act]'); if (!btn) return;
       const id = btn.closest('.ver').dataset.id, act = btn.dataset.act;
-      if (act === 'open') openVersion(id);
+      if (act === 'reload') toggleReload(id);
+      else if (act === 'open') openVersion(id);
       else if (act === 'rename') renameVersion(id);
       else if (act === 'del') deleteVersion(id);
       else if (act === 'export') { const v = versions.find(x => x.id === id); if (v) downloadJson(await buildExport(normalize(JSON.parse(v.state))), `poppy-${v.name.replace(/[^\w-]+/g, '-')}.json`); }
@@ -837,37 +864,6 @@
       if (isEditing()) { renderList(); syncSlide(); }
       updateSaveUi();
     }
-    // ---- Suggested shows (ready-made song orders and picture choices, shipped in suggested-shows.json) ----
-    let suggested = [];
-    function renderSuggested() {
-      const list = $('suggestedList'); if (!list) return;
-      list.innerHTML = '';
-      suggested.forEach(sg => {
-        const li = document.createElement('li');
-        li.className = 'ver'; li.dataset.id = sg.id;
-        li.innerHTML = '<div class="vtop"><b></b></div><div class="vmeta"></div><ol class="chapters"></ol><div class="vacts"><button class="btn" data-act="open-suggested" type="button">Open this show</button></div>';
-        li.querySelector('b').textContent = sg.name;
-        li.querySelector('.vmeta').textContent = sg.summary;
-        const ol = li.querySelector('.chapters');
-        sg.chapters.forEach((c, i) => {
-          const it = document.createElement('li');
-          it.style.setProperty('--sc', SONGS[c.song - 1].color);
-          it.innerHTML = '<b></b><small></small>';
-          it.querySelector('b').textContent = `${i + 1} · ${SONGS[c.song - 1].title}: ${c.theme}`;
-          it.querySelector('small').textContent = `${c.slides} slides. ${c.mood}`;
-          ol.append(it);
-        });
-        list.append(li);
-      });
-    }
-    async function openSuggested(id) {
-      const sg = suggested.find(x => x.id === id); if (!sg) return;
-      if (isDirty() && !confirm('You have unsaved changes. Open this suggested show anyway? Your unsaved changes will be lost.')) return;
-      state = normalize({ songOrder: sg.songOrder, songMap: sg.songMap, order: sg.order });
-      await applyState(0); renderVersions();
-      toast(`Opened “${sg.name}”. Press Save to keep it as a version.`);
-    }
-    $('suggestedList').addEventListener('click', e => { const b = e.target.closest('button[data-act="open-suggested"]'); if (b) openSuggested(b.closest('.ver').dataset.id); });
     function resetClick() {
       if (isDirty()) {
         if (!confirm('Throw away your unsaved changes and go back to the last saved version?')) return;
@@ -1202,13 +1198,20 @@
       $('edit').classList.remove('on');
       if (startPlaying && slides.length > 1) { play(); wake(3000); }
     }
+    const scrollMemo = {}; // each tab's scroll position, so switching tabs or closing the panel never loses your place
     function selectTab(name) {
+      const prev = document.querySelector('.tab[aria-selected="true"]')?.dataset.tab;
+      const prevPane = prev && document.querySelector(`.pane[data-pane="${prev}"]`);
+      if (prevPane && !prevPane.hidden) scrollMemo[prev] = prevPane.scrollTop;
       document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === name)));
       document.querySelectorAll('.pane').forEach(p => { p.hidden = p.dataset.pane !== name; });
-      if (name === 'slides') { renderList(); markNow(); }
+      if (name === 'slides') renderList();
       if (name === 'slide') syncSlide();
       if (name === 'versions') renderVersions();
       if (name === 'show') syncShow();
+      const pane = document.querySelector(`.pane[data-pane="${name}"]`);
+      if (name in scrollMemo) pane.scrollTop = scrollMemo[name];
+      else if (name === 'slides') markNow(true, true); // first visit: start at the selected slide
     }
     const activeTab = () => document.querySelector('.tab[aria-selected="true"]').dataset.tab;
 
@@ -1373,13 +1376,27 @@
     const COLLAPSE_KEY = 'poppy-collapsed-songs-v1';
     const collapsed = new Set((() => { try { return JSON.parse(localStorage.getItem(COLLAPSE_KEY) || '[]'); } catch (_) { return []; } })());
     const saveCollapsed = () => { try { localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...collapsed])); } catch (_) { /* optional */ } };
-    function setSongCollapsed(n, on) {
-      if (on) collapsed.add(n); else collapsed.delete(n);
-      saveCollapsed();
-      listEl.querySelectorAll(`.item[data-song="${n}"]`).forEach(li => li.classList.toggle('folded', on));
-      const h = listEl.querySelector(`.sec[data-song="${n}"]`);
-      if (h) { h.classList.toggle('collapsed', on); h.setAttribute('aria-expanded', String(!on)); h.querySelector('.chev').textContent = on ? '▸' : '▾'; }
-      markNow();
+    // Run a change to the list while keeping an anchor element (default: the first song bar on screen) at the same spot.
+    function keepPosition(change, anchor) {
+      const pane = listEl.closest('.pane'), pr = pane.getBoundingClientRect();
+      const a = anchor || [...listEl.querySelectorAll('.sec')].find(h => h.getBoundingClientRect().bottom > pr.top + 4) || null;
+      const before = a ? a.getBoundingClientRect().top - pr.top : 0;
+      change();
+      if (a) pane.scrollTop += (a.getBoundingClientRect().top - pr.top) - before;
+    }
+    function setSongCollapsed(n, on, keep = true) {
+      const apply = () => {
+        if (on) collapsed.add(n); else collapsed.delete(n);
+        saveCollapsed();
+        listEl.querySelectorAll(`.item[data-song="${n}"]`).forEach(li => li.classList.toggle('folded', on));
+        const h = listEl.querySelector(`.sec[data-song="${n}"]`);
+        if (h) { h.classList.toggle('collapsed', on); h.setAttribute('aria-expanded', String(!on)); h.querySelector('.chev').textContent = on ? '▸' : '▾'; }
+        markNow(false);
+      };
+      if (keep) { // hold the song bar you clicked in place; if it isn't on screen, hold whatever is
+        const h = listEl.querySelector(`.sec[data-song="${n}"]`), pr = listEl.closest('.pane').getBoundingClientRect(), r = h && h.getBoundingClientRect();
+        keepPosition(apply, r && r.bottom > pr.top && r.top < pr.bottom ? h : null);
+      } else apply();
     }
     const toggleSong = n => setSongCollapsed(n, !collapsed.has(n));
 
@@ -1427,8 +1444,8 @@
       $('deletedBox').hidden = gone.length === 0;
       const del = $('gridDeleted'); del.innerHTML = '';
       gone.forEach(f => { const b = thumbBtn(f, '↺', 'gone'); b.title = 'Restore'; b.onclick = () => restore(f); del.append(b); });
-      pane.scrollTop = top;
-      markNow();
+      if (!pane.hidden) pane.scrollTop = top;
+      markNow(false);
     }
     function renderTimeline() {
       const el = $('timeline'); el.innerHTML = '';
@@ -1451,12 +1468,20 @@
       $('tlTotal').textContent = `${fmtDur(tl.total)} total · ${files.length} slides`;
       $('timelineNote').textContent = current === 0 ? 'Selected: the opening slide (before the first song).' : `Selected: slide ${current}, starts ${fmtDur(t)} into the show.`;
     }
-    function markNow() {
+    function revealInPane(el) { // minimal scroll inside the list only (scrollIntoView can also shift the whole page)
+      const pane = listEl.closest('.pane'), pr = pane.getBoundingClientRect(), r = el.getBoundingClientRect();
+      if (r.top < pr.top) pane.scrollTop += r.top - pr.top - 8; else if (r.bottom > pr.bottom) pane.scrollTop += r.bottom - pr.bottom + 8;
+    }
+    let revealedFile = null;
+    function markNow(scroll = true, force = false) {
       updateTimelineHead();
       let nowEl = null;
       listEl.querySelectorAll('.item').forEach(li => { const on = Number(li.dataset.index) === current; li.classList.toggle('now', on); if (on) nowEl = li; });
       listEl.querySelectorAll('.sec').forEach(h => h.classList.toggle('has-now', !!nowEl && nowEl.classList.contains('folded') && nowEl.dataset.song === h.dataset.song));
-      if (nowEl && activeTab() === 'slides' && !nowEl.classList.contains('folded')) nowEl.scrollIntoView({ block: 'nearest' });
+      const which = current > 0 ? files[current - 1] : '#opening', changed = which !== revealedFile;
+      revealedFile = which;
+      // follow the selection only when it moved (arrows, Previous/Next, Send to…), never because the list was redrawn or a song was folded
+      if (scroll && (changed || force) && nowEl && activeTab() === 'slides' && !nowEl.classList.contains('folded')) revealInPane(nowEl);
     }
     function thumbBtn(file, label, cls) {
       const b = document.createElement('button');
@@ -1726,8 +1751,8 @@
       inp.value = fmtDur(songSecs(k)); // snap a bad entry back to the real value
       renderSongLens(); renderList(); updateNowPlaying();
     });
-    $('collapseAll').onclick = () => SONGS.forEach(sg => setSongCollapsed(sg.n, true));
-    $('expandAll').onclick = () => SONGS.forEach(sg => setSongCollapsed(sg.n, false));
+    $('collapseAll').onclick = () => keepPosition(() => SONGS.forEach(sg => setSongCollapsed(sg.n, true, false)));
+    $('expandAll').onclick = () => keepPosition(() => SONGS.forEach(sg => setSongCollapsed(sg.n, false, false)));
     $('sendTo').addEventListener('click', e => openSendMenu(files[current - 1], e.currentTarget));
     $('oLoop').addEventListener('change', e => setLoop(e.target.checked));
     $('oCutoff').addEventListener('input', e => { const n = parseInt(e.target.value, 10); if (n >= 1900 && n <= 2100) { state.opts.cutoff = n; save(); buildSlides(current); } });
@@ -1787,7 +1812,6 @@
     $('modePlay').onclick = () => closePanel(true);
     $('saveBtn').onclick = commit;
     $('homeBtn').addEventListener('click', goHome); // back to the opening slide (and stop, like Esc)
-    $('suggestBtn').onclick = () => { if (suggested.length) openSuggested(suggested[0].id); else toast('The suggested show is still loading. Try again in a moment.'); };
     $('resetTop').onclick = resetClick;
     $('edit').onclick = () => (isEditing() ? closePanel() : openPanel());
     $('customize').onclick = () => openPanel('slides');
@@ -1801,7 +1825,7 @@
       let list = []; try { list = vs ? JSON.parse(vs) : []; } catch (_) { /* ignore a bad backup */ }
       if (!list.length && legacy) list = [{ id: uid(), name: 'Version 1', savedAt: Date.now(), state: legacy, count: 0, own: 0 }];
       if (!list.length) return;
-      versions = list; currentId = typeof cur === 'string' ? cur : list[list.length - 1].id;
+      versions = list; currentId = typeof cur === 'string' ? cur : list[list.length - 1].id; reloadId = currentId;
       const v = currentVersion();
       try { state = v ? normalize(JSON.parse(v.state)) : defaults(); } catch (_) { return; }
       markSaved(); await applyState(0); renderVersions();
@@ -1815,7 +1839,6 @@
       load(0);
     }).catch(() => { $('begin').textContent = 'Photos could not load — please refresh'; });
     updateSaveUi(); renderVersions();
-    fetch('suggested-shows.json').then(r => r.json()).then(l => { suggested = Array.isArray(l) ? l : []; renderSuggested(); }).catch(() => { /* optional */ });
 
     $('begin').addEventListener('click', () => { show(0); play(); toggleFullscreen(); tip(); }); // starts on the opening slide, which holds for its own time
     $('previous').addEventListener('click', () => show(current - 1));
