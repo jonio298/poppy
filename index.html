@@ -228,6 +228,8 @@
     .item { touch-action:pan-y; display:flex; align-items:center; gap:8px; padding:6px 6px 6px 4px; border:1px solid rgba(255,255,255,.1); border-radius:12px; background:#18221c; color:#eee9dc; font:400 .85rem/1.25 Arial,sans-serif; cursor:pointer; user-select:none; -webkit-user-select:none; }
     .item.now { border-color:#d8ba7a; background:#1f2b23; }
     .item.placeholder { opacity:.35; border-style:dashed; }
+    .drop-line { position:fixed; z-index:58; height:4px; border-radius:2px; background:#d8ba7a; box-shadow:0 0 10px rgba(216,186,122,.9); pointer-events:none; }
+    .drop-line::before { content:''; position:absolute; left:-4px; top:-3px; width:10px; height:10px; border-radius:50%; background:#d8ba7a; }
     .item[data-file] { cursor:grab; }
     .item.ghost { position:fixed; z-index:60; margin:0; pointer-events:none; box-shadow:0 14px 34px rgba(0,0,0,.55); border-color:#d8ba7a; opacity:.97; }
     .item.cover-row { padding-left:10px; }
@@ -1722,27 +1724,34 @@
       ghost.classList.add('ghost'); ghost.style.cssText = `width:${rect.width}px;left:${rect.left}px;top:${rect.top}px`;
       document.body.append(ghost);
       li.classList.add('placeholder');
+      const line = document.createElement('div'); line.className = 'drop-line'; line.hidden = true; document.body.append(line); // shows exactly where the slide will land
       if (state.opts.timeline) listEl.classList.add('slide-drag'); // lights up the song bars as drop targets
-      let dropBar = null;
+      const tl = state.opts.timeline;
+      let dropBar = null, before = null, lastY = e.clientY, raf;
+      const targets = () => [...listEl.children].filter(el => el !== li && !el.classList.contains('folded') && (el.classList.contains('item') || el.classList.contains('sec')));
+      const update = () => { // the list doesn't move while you drag: only this line (or a song bar's glow) tells you where it will go
+        ghost.style.top = `${lastY - offY}px`;
+        const list = targets();
+        const over = tl ? list.find(h => { if (!h.classList.contains('sec')) return false; const r = h.getBoundingClientRect(); return lastY >= r.top + r.height * .25 && lastY <= r.bottom - r.height * .25; }) || null : null; // the middle of a bar = into that song
+        if (over !== dropBar) { dropBar?.classList.remove('drop-target'); dropBar = over; dropBar?.classList.add('drop-target'); }
+        if (dropBar) { line.hidden = true; return; }
+        before = list.find(el => { const r = el.getBoundingClientRect(); return lastY < r.top + r.height / 2; }) || null;
+        if (tl && before && before === list[0]) before = list[1] || null; // nothing goes above the first song's bar
+        const lr = listEl.getBoundingClientRect(), last = list[list.length - 1];
+        const y = before ? before.getBoundingClientRect().top - 4 : last ? last.getBoundingClientRect().bottom + 4 : lr.top;
+        line.style.cssText = `left:${lr.left}px;width:${lr.width}px;top:${y - 2}px`; line.hidden = false;
+      };
       const noScroll = ev => ev.preventDefault();
       window.addEventListener('touchmove', noScroll, { passive: false }); // keep the list from scrolling under a finger that is dragging
-      let lastY = e.clientY, raf;
-      const move = ev => {
-        lastY = ev.clientY;
-        ghost.style.top = `${ev.clientY - offY}px`;
-        const over = state.opts.timeline ? [...listEl.querySelectorAll('.sec')].find(h => { const r = h.getBoundingClientRect(); return ev.clientY >= r.top && ev.clientY <= r.bottom; }) || null : null;
-        if (over !== dropBar) { dropBar?.classList.remove('drop-target'); dropBar = over; dropBar?.classList.add('drop-target'); }
-        if (dropBar) return; // over a song bar: the slide will go INTO that song, so leave the placeholder where it is
-        const others = [...listEl.children].filter(el => el !== li && !el.classList.contains('cover-row') && !el.classList.contains('folded')); // slides and song headers
-        const before = others.find(it => { const r = it.getBoundingClientRect(); return ev.clientY < r.top + r.height / 2; });
-        if (before) { if (li.nextElementSibling !== before) listEl.insertBefore(li, before); } else listEl.append(li);
-      };
-      const autoscroll = () => {
-        const r = pane.getBoundingClientRect();
-        if (lastY < r.top + 56) pane.scrollTop -= 12; else if (lastY > r.bottom - 56) pane.scrollTop += 12;
+      const move = ev => { lastY = ev.clientY; update(); };
+      const autoscroll = () => { // the closer to the top or bottom edge, the faster; the drop line keeps up as the list moves
+        const r = pane.getBoundingClientRect(), zone = 80;
+        const top = r.top + zone - lastY, bottom = lastY - (r.bottom - zone);
+        if (top > 0) pane.scrollTop -= Math.min(16, top / zone * 16); else if (bottom > 0) pane.scrollTop += Math.min(16, bottom / zone * 16);
+        update();
         raf = requestAnimationFrame(autoscroll);
       };
-      autoscroll();
+      update(); autoscroll();
       const done = ev => {
         cancelAnimationFrame(raf);
         window.removeEventListener('pointermove', move);
@@ -1750,22 +1759,26 @@
         window.removeEventListener('pointercancel', done);
         window.removeEventListener('touchmove', noScroll);
         justDragged = true; setTimeout(() => { justDragged = false; }, 120);
-        ghost.remove(); li.classList.remove('placeholder'); listEl.classList.remove('slide-drag');
+        ghost.remove(); line.remove(); li.classList.remove('placeholder'); listEl.classList.remove('slide-drag');
         if (dropBar) { // let go on a song bar: into that song, at the end
           dropBar.classList.remove('drop-target');
           if (ev && ev.type === 'pointercancel') return renderList();   // the touch scrolled away: not a drop
           return sendTo(li.dataset.file, Number(dropBar.dataset.song), 'end');
         }
+        if (ev && ev.type === 'pointercancel') return renderList();
+        const seq = [...listEl.children].filter(el => el !== li);
+        const at = before ? seq.indexOf(before) : seq.length;
+        seq.splice(at < 0 ? seq.length : at, 0, li);
         const order = [], map = { ...state.songMap };
         let song = 1;
-        [...listEl.children].forEach(el => {
+        seq.forEach(el => {
           if (el.classList.contains('sec')) song = Number(el.dataset.song);
           else if (el.dataset.file) {
             const f = el.dataset.file; order.push(f);
-            if (state.opts.timeline && song !== songOf(f)) { if (song === (defaultSongMap[f] || SONGS.length)) delete map[f]; else map[f] = song; }
+            if (tl && song !== songOf(f)) { if (song === (defaultSongMap[f] || SONGS.length)) delete map[f]; else map[f] = song; }
           }
         });
-        if (state.opts.timeline) { // a song can't take more slides than fit its length
+        if (tl) { // a song can't take more slides than fit its length
           const cnt = (m, k) => order.filter(f => (Number(m[f]) || defaultSongMap[f] || SONGS.length) === k).length;
           const full = SONGS.find(sg => cnt(map, sg.n) > songCap(sg.n) && cnt(map, sg.n) > cnt(state.songMap, sg.n));
           if (full) { fullToast(full.n); return renderList(); }
