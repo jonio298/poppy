@@ -44,6 +44,10 @@
     .snap img:not(.ready) { opacity:0; }
     .st-plain .snap { filter:drop-shadow(0 20px 50px rgba(0,0,0,.5)); }
     .st-border .snap { --bw:clamp(6px,.85vw,12px); background:#f7f4ec; box-shadow:0 18px 46px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.35); }
+    .st-rounded .snap { --bw:clamp(7px,.9vw,12px); background:#fff; border-radius:16px; box-shadow:0 18px 46px rgba(0,0,0,.5); }
+    .st-rounded .snap img { border-radius:9px; }
+    .st-matte .snap { --bw:clamp(16px,2.2vw,32px); background:#f1ebdd; box-shadow:0 18px 46px rgba(0,0,0,.5); }
+    .st-matte .snap img { box-shadow:0 0 0 1px rgba(80,62,34,.4); }
     .st-polaroid .snap { --bw:14px; --fh:76px; padding:14px 14px 62px; background:#f8f4ea; box-shadow:0 22px 50px rgba(0,0,0,.5); }
     .st-polaroid .snap::before { content:""; position:absolute; top:-14px; left:50%; width:90px; height:28px; margin-left:-45px; background:rgba(235,224,180,.72); transform:rotate(-3deg); box-shadow:0 1px 3px rgba(0,0,0,.2); }
     .st-polaroid .snap .ink { position:absolute; left:0; right:0; bottom:14px; text-align:center; color:#3c372c; font:italic 1.15rem/1 "Segoe Script","Bradley Hand","Brush Script MT",cursive; }
@@ -172,9 +176,10 @@
     .seg { padding:9px 16px; border:0; border-radius:999px; background:transparent; color:#9bab9b; font:700 .74rem Arial,sans-serif; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; }
     .seg:hover { color:#d8ba7a; } .seg.on, .seg.on:hover { background:#d8ba7a; color:#141c17; }
     .list { list-style:none; margin:0 0 16px; padding:0; display:flex; flex-direction:column; gap:6px; }
-    .item { display:flex; align-items:center; gap:8px; padding:6px 6px 6px 4px; border:1px solid rgba(255,255,255,.1); border-radius:12px; background:#18221c; color:#eee9dc; font:400 .85rem/1.25 Arial,sans-serif; cursor:pointer; user-select:none; -webkit-user-select:none; }
+    .item { touch-action:pan-y; display:flex; align-items:center; gap:8px; padding:6px 6px 6px 4px; border:1px solid rgba(255,255,255,.1); border-radius:12px; background:#18221c; color:#eee9dc; font:400 .85rem/1.25 Arial,sans-serif; cursor:pointer; user-select:none; -webkit-user-select:none; }
     .item.now { border-color:#d8ba7a; background:#1f2b23; }
     .item.placeholder { opacity:.35; border-style:dashed; }
+    .item[data-file] { cursor:grab; }
     .item.ghost { position:fixed; z-index:60; margin:0; pointer-events:none; box-shadow:0 14px 34px rgba(0,0,0,.55); border-color:#d8ba7a; opacity:.97; }
     .item.cover-row { padding-left:10px; }
     .item img { flex:none; width:52px; height:44px; object-fit:cover; border-radius:6px; background:#0d130f; pointer-events:none; }
@@ -192,6 +197,12 @@
     .del svg { width:13px; height:13px; stroke:currentColor; stroke-width:3.2; fill:none; stroke-linecap:round; }
     .range { display:flex; align-items:center; gap:12px; } .range input { flex:1; accent-color:#d8ba7a; height:32px; } .range output { min-width:46px; text-align:right; color:#d8ba7a; font:700 .85rem Arial,sans-serif; }
     body.editing .controls, body.editing .hint { display:none; }
+    .endcard { position:fixed; z-index:12; left:50%; top:50%; transform:translate(-50%,-46%); opacity:0; pointer-events:none; transition:opacity .6s ease, transform .6s ease; }
+    .endcard.show { opacity:1; transform:translate(-50%,-50%); pointer-events:auto; }
+    .endcard button { display:flex; align-items:center; gap:12px; padding:18px 30px; border:1px solid var(--accent); border-radius:999px; background:color-mix(in srgb, var(--bg) 78%, transparent); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); color:var(--text); cursor:pointer; font:700 .9rem Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; box-shadow:0 18px 50px rgba(0,0,0,.5); }
+    .endcard button:hover, .endcard button:focus-visible { background:var(--accent); color:var(--bg); outline:none; }
+    .endcard svg { width:22px; height:22px; fill:currentColor; }
+    @media (max-width:420px) { .control { width:40px; height:40px; } .controls { gap:2px; padding:6px; } }
 
     /* ---------- Phones ---------- */
     @media (max-width:760px) {
@@ -254,17 +265,20 @@
 
   <div class="chrome" aria-label="Slideshow controls">
     <div class="topline"><span id="topTitle">In Loving Memory · Charles Ross</span><span id="counter">Opening</span></div>
-    <div class="hint">Arrow keys to navigate · Space to pause · F for full screen · E to edit</div>
+    <div class="hint">Arrow keys to navigate · Space to pause · R to restart · F for full screen · E to edit · Esc to pause</div>
     <div class="controls">
       <button class="control" id="previous" aria-label="Previous photo"><svg viewBox="0 0 24 24"><path d="M15.4 5.4 14 4 6 12l8 8 1.4-1.4L8.8 12z"/></svg></button>
       <button class="control" id="playPause" aria-label="Play slideshow"></button>
       <button class="control" id="next" aria-label="Next photo"><svg viewBox="0 0 24 24"><path d="M8.6 5.4 10 4l8 8-8 8-1.4-1.4 6.6-6.6z"/></svg></button>
+      <button class="control" id="restart" aria-label="Restart slideshow" title="Restart slideshow"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg></button>
+      <button class="control" id="loopBtn" aria-label="Auto-scroll: loop continuously" aria-pressed="false" title="Auto-scroll: loop continuously"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z"/></svg></button>
       <button class="control" id="edit" aria-label="Edit mode" title="Edit mode"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75zM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z"/></svg></button>
       <button class="control" id="fullscreen" aria-label="Enter full screen"><svg viewBox="0 0 24 24"><path d="M4 4h6v2H6v4H4zm10 0h6v6h-2V6h-4zM4 14h2v4h4v2H4zm14 0h2v6h-6v-2h4z"/></svg></button>
     </div>
     <div class="progress" id="progress"></div>
   </div>
   <div class="swipe-tip" id="swipeTip">Swipe to move through photos</div>
+  <div class="endcard" id="endCard"><button id="endRestart" type="button"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg> Restart slideshow</button></div>
   <div class="toast" id="toast" role="status"><span id="toastMsg"></span><button id="toastUndo" type="button">Undo</button></div>
 
   <aside class="panel" id="panel" aria-label="Edit slideshow">
@@ -283,7 +297,7 @@
     </div>
 
     <div class="pane" data-pane="slides">
-      <p class="note">Drag <b>⠿</b> to reorder. Tap a slide to preview it, <b>✎</b> to edit it, or the red <b style="color:#ff6b5e">✕</b> to delete it.</p>
+      <p class="note">Drag any slide up or down to reorder (press and hold on a phone). Tap a slide to preview it, <b>✎</b> to edit it, or the red <b style="color:#ff6b5e">✕</b> to delete it.</p>
       <ul class="list" id="slideList"></ul>
       <div id="deletedBox" hidden>
         <span class="label">Deleted — tap to restore</span>
@@ -310,9 +324,16 @@
         <div class="field"><span>Photo size</span>
           <div class="range"><input type="range" id="fScale" min="30" max="100" step="1" value="100" aria-label="Photo size"><output id="fScaleOut">100%</output></div></div>
         <label class="field"><span>Photo style</span>
-          <select id="fStyle"><option value="default">Use show default</option><option value="border">Thin white border</option><option value="plain">Plain (no border)</option><option value="polaroid">Polaroid snapshot</option><option value="framed">Gold frame</option><option value="film">Film strip</option></select></label>
+          <select id="fStyle"><option value="default">Use show default</option><option value="border">Thin white border</option><option value="rounded">Rounded white border</option><option value="matte">Cream mat</option><option value="framed">Gold frame</option><option value="polaroid">Polaroid snapshot</option><option value="film">Film strip</option><option value="plain">Plain (no border)</option></select></label>
         <label class="field"><span>Transition into this photo</span>
           <select id="fTx"><option value="default">Use show default</option></select></label>
+        <label class="field"><span>Seconds on screen</span><input type="number" id="fSeconds" min="2" max="300" step="1" placeholder="Same as the rest of the show"></label>
+        <label class="field"><span>Ken Burns motion</span>
+          <select id="fMotion"><option value="default">Use show default</option><option value="classic">Classic (slow zoom + drift)</option><option value="gentle">Gentle</option><option value="off">Off (photo stays still)</option></select></label>
+        <div class="row stack">
+          <button class="btn" id="applyTxAll" type="button">Transition → all slides</button>
+          <button class="btn" id="applyStyleAll" type="button">Style → all slides</button>
+        </div>
         <div class="row stack">
           <button class="btn" id="previewTx" type="button">▶ Preview transition</button>
           <button class="btn" id="resetSlide" type="button">Reset this slide</button>
@@ -334,7 +355,8 @@
       <span class="label">Whole show</span>
       <label class="field"><span>Default transition</span><select id="oTx"></select></label>
       <label class="field"><span>Default photo style</span>
-        <select id="oStyle"><option value="border">Thin white border</option><option value="plain">Plain (no border)</option><option value="polaroid">Polaroid snapshot</option><option value="framed">Gold frame</option><option value="film">Film strip</option></select></label>
+        <select id="oStyle"><option value="auto">Automatic — Polaroid for older photos, borders for newer</option><option value="border">Thin white border</option><option value="rounded">Rounded white border</option><option value="matte">Cream mat</option><option value="framed">Gold frame</option><option value="polaroid">Polaroid snapshot</option><option value="film">Film strip</option><option value="plain">Plain (no border)</option></select></label>
+      <label class="field"><span>Polaroid look for photos older than (year)</span><input type="number" id="oCutoff" min="1900" max="2100" step="1"></label>
       <label class="field"><span>Seconds per photo</span><input type="number" id="oSeconds" min="2" max="120" step="1"></label>
       <p class="note" id="secondsNote"></p>
       <label class="field"><span>Ken Burns motion</span>
@@ -342,6 +364,7 @@
       <label class="field"><span>Photo size</span>
         <select id="oSize"><option value="99">Fill the screen (as big as fits)</option><option value="3">Large</option><option value="2">Balanced</option><option value="1.4">Small — never enlarge much</option></select></label>
       <label class="check"><input type="checkbox" id="oFilm"> Vintage film look (grain, vignette, warm tone)</label>
+      <label class="check"><input type="checkbox" id="oLoop"> Auto-scroll: keep playing in a loop (starts over after the last photo)</label>
     </div>
 
     <div class="pane" data-pane="theme" hidden>
@@ -385,7 +408,7 @@
       v: 1,
       theme: { preset: 'forest', bg: null, accent: null, font: 'classic' },
       cover: { eyebrow: 'In Loving Memory', title: 'Charles Ross', names: '“Charlie”   “Dad”   “Poppy”' },
-      opts: { tx: 'fade', style: 'border', motion: 'classic', size: 99, film: true, seconds: 0 },
+      opts: { tx: 'random', style: 'auto', cutoff: 1990, motion: 'classic', size: 99, film: true, loop: false, seconds: 0 },
       slides: {}, order: [], deleted: [],
     });
     let state = defaults();
@@ -432,30 +455,50 @@
     const edit = f => state.slides[f] || (state.slides[f] = {});
     const dateOf = f => { const e = state.slides[f]; return e && e.date !== undefined ? e.date : (byFile[f].date || ''); };
     const captionOf = f => (state.slides[f]?.caption || '').trim();
-    const styleOf = f => { const s = state.slides[f]?.style; return s && s !== 'default' ? s : state.opts.style; };
+    // Older photos get the Polaroid look; newer ones rotate through different borders.
+    const NEW_STYLES = ['border', 'rounded', 'framed', 'matte'];
+    function yearOf(f) {
+      if (byFile[f]?.year) return byFile[f].year; // hand-set from the caption (e.g. "1970s") when the file has no date
+      const m = f.match(/^\d+_(\d{4})/); if (m) return Number(m[1]);
+      const d = byFile[f]?.date || '';
+      let n = d.match(/^(\d)0'?s$/); if (n) return 1900 + Number(n[1]) * 10;
+      n = d.match(/^(20\d0)s$/); return n ? Number(n[1]) : 0;
+    }
+    function styleOf(f, index) {
+      const own = state.slides[f]?.style; if (own && own !== 'default') return own;
+      if (state.opts.style !== 'auto') return state.opts.style;
+      const y = yearOf(f);
+      return y && y < state.opts.cutoff ? 'polaroid' : NEW_STYLES[index % NEW_STYLES.length];
+    }
     const srcOf = f => `photos/${encodeURIComponent(f)}`;
     const thumbOf = f => `photos/thumbs/${encodeURIComponent(f)}`;
 
     function intervalMs() { return state.opts.seconds > 0 ? state.opts.seconds * 1000 : PLAYLIST_DURATION / Math.max(1, files.length); }
+    function slideMs(i) { const n = state.slides[files[i - 1]]?.seconds; return n > 0 ? n * 1000 : intervalMs(); }
 
+    let lastFx = null;
     function effectFor(i) {
-      const f = files[i - 1];
-      const own = state.slides[f]?.tx;
+      const own = state.slides[files[i - 1]]?.tx;
       let choice = own && own !== 'default' ? own : state.opts.tx;
-      if (choice === 'rotate') return EFFECTS[(i - 1) % EFFECTS.length][0];
-      if (choice === 'random') return EFFECTS[Math.floor(Math.random() * EFFECTS.length)][0];
+      if (choice === 'rotate') choice = EFFECTS[(i - 1) % EFFECTS.length][0];
+      else if (choice === 'random') { // shuffled, but never the same one twice in a row
+        const pool = EFFECTS.map(e => e[0]).filter(x => x !== lastFx);
+        choice = pool[Math.floor(Math.random() * pool.length)];
+      }
+      lastFx = choice;
       return choice;
     }
 
     function renderSlide(file, index) {
       const section = document.createElement('section');
-      const style = styleOf(file), caption = captionOf(file), date = dateOf(file);
+      const style = styleOf(file, index), caption = captionOf(file), date = dateOf(file);
       section.className = `slide st-${style}${caption ? ' has-caption' : ''}`;
       section.dataset.file = file;
       const bg = document.createElement('div');
       bg.className = 'backdrop'; bg.dataset.bg = srcOf(file); bg.setAttribute('aria-hidden', 'true');
       const fig = document.createElement('div');
-      const motion = state.opts.motion;
+      const ownMotion = state.slides[file]?.motion;
+      const motion = ownMotion && ownMotion !== 'default' ? ownMotion : state.opts.motion;
       fig.className = 'fig' + (motion !== 'off' ? ' kb' : '');
       if (motion !== 'off') {
         const k = motion === 'gentle' ? .05 : .09, p = (k * 35).toFixed(2); // pan stays inside the slack left by the smaller scale
@@ -530,6 +573,7 @@
     const STRIP = /\b(active|leaving|entering|fx-\w+)\b/g;
     function show(index, { instant = false } = {}) {
       const previous = current;
+      $('endCard').classList.remove('show');
       current = Math.max(0, Math.min(index, slides.length - 1));
       load(current);
       document.body.classList.toggle('on-cover', current === 0);
@@ -549,7 +593,7 @@
         clearTimeout(fxTimer);
         fxTimer = setTimeout(() => outgoing.classList.remove('leaving'), ms + 100);
       }
-      slides[current]?.querySelector('.fig')?.style.setProperty('--kb-dur', `${Math.round(intervalMs() + 2600)}ms`);
+      slides[current]?.querySelector('.fig')?.style.setProperty('--kb-dur', `${Math.round(slideMs(current) + 2600)}ms`);
       counter.textContent = current === 0 ? 'Opening' : `${current} / ${slides.length - 1}`;
       progress.style.width = slides.length > 1 ? `${(current / (slides.length - 1)) * 100}%` : '0';
       if (playing) schedule();
@@ -558,9 +602,20 @@
 
     function schedule() {
       clearTimeout(timer);
-      if (!playing) return;
-      if (current >= slides.length - 1) { pause(); return; }
-      timer = setTimeout(() => show(current + 1), intervalMs());
+      if (!playing || current === 0) return;
+      const last = current >= slides.length - 1;
+      timer = setTimeout(() => { if (!last) show(current + 1); else if (state.opts.loop) show(1); else endShow(); }, slideMs(current));
+    }
+    function endShow() { pause(); $('endCard').classList.add('show'); }
+    function restart() {
+      if (slides.length < 2) return;
+      $('endCard').classList.remove('show');
+      show(1); play(); wake(3000);
+    }
+    function setLoop(on) {
+      state.opts.loop = on; save();
+      $('loopBtn').classList.toggle('on', on); $('loopBtn').setAttribute('aria-pressed', String(on));
+      $('oLoop').checked = on;
     }
     async function keepAwake() { try { wakeLock = await navigator.wakeLock?.request('screen'); } catch (_) { /* optional */ } }
     function play() {
@@ -580,12 +635,21 @@
       play();
     }
     document.addEventListener('visibilitychange', () => { if (playing && document.visibilityState === 'visible') keepAwake(); });
+    let leavingFullscreen = false; // true when our own button (not Esc) exits full screen
     async function toggleFullscreen() {
       try {
         if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
-        else await document.exitFullscreen?.();
-      } catch (_) { /* Playback still works when the browser declines full screen. */ }
+        else { leavingFullscreen = true; await document.exitFullscreen?.(); }
+      } catch (_) { leavingFullscreen = false; /* Playback still works when the browser declines full screen. */ }
     }
+    document.addEventListener('fullscreenchange', () => {
+      const on = !!document.fullscreenElement;
+      fullscreenBtn.setAttribute('aria-label', on ? 'Exit full screen' : 'Enter full screen');
+      if (!on) { // Esc (or the browser) left full screen: stop the show where it is
+        if (!leavingFullscreen && playing) { pause(); toast('Paused — press ▶ to keep going'); }
+        leavingFullscreen = false;
+      }
+    });
     if (!document.documentElement.requestFullscreen) fullscreenBtn.hidden = true;
     playPause.innerHTML = ICON_PLAY;
 
@@ -642,7 +706,7 @@
     const activeTab = () => document.querySelector('.tab[aria-selected="true"]').dataset.tab;
 
     function fillSelect(sel, withDefault) {
-      sel.innerHTML = (withDefault ? '<option value="default">Use show default</option>' : '<option value="rotate">Mix them up in order</option><option value="random">Random every time</option>')
+      sel.innerHTML = (withDefault ? '<option value="default">Use show default</option>' : '<option value="random">Random — shuffled, never the same twice in a row</option><option value="rotate">Go through them in order</option>')
         + EFFECTS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
     }
     fillSelect($('fTx'), true); fillSelect($('oTx'), false);
@@ -674,7 +738,7 @@
 
     function syncShow() {
       $('fEyebrow').value = state.cover.eyebrow; $('fTitle').value = state.cover.title; $('fNames').value = state.cover.names;
-      $('oTx').value = state.opts.tx; $('oStyle').value = state.opts.style; $('oMotion').value = state.opts.motion; $('oSize').value = String(state.opts.size); $('oFilm').checked = state.opts.film;
+      $('oTx').value = state.opts.tx; $('oStyle').value = state.opts.style; $('oMotion').value = state.opts.motion; $('oSize').value = String(state.opts.size); $('oFilm').checked = state.opts.film; $('oLoop').checked = !!state.opts.loop; $('oCutoff').value = state.opts.cutoff;
       $('oSeconds').value = state.opts.seconds || '';
       $('oSeconds').placeholder = `Auto (${(PLAYLIST_DURATION / 1000 / Math.max(1, files.length)).toFixed(1)}s)`;
       $('secondsNote').textContent = state.opts.seconds
@@ -691,6 +755,8 @@
       if (document.activeElement !== $('fCaption')) $('fCaption').value = e.caption || '';
       const sc = e.scale || 100; $('fScale').value = sc; $('fScaleOut').textContent = `${sc}%`;
       $('fStyle').value = e.style || 'default'; $('fTx').value = e.tx || 'default';
+      $('fMotion').value = e.motion || 'default';
+      if (document.activeElement !== $('fSeconds')) $('fSeconds').value = e.seconds || '';
       $('moveEarlier').disabled = current <= 1; $('moveLater').disabled = current >= files.length;
     }
     function syncPanel() {
@@ -742,7 +808,7 @@
     }
 
     listEl.addEventListener('click', e => {
-      const li = e.target.closest('.item[data-file]'); if (!li) return;
+      const li = e.target.closest('.item[data-file]'); if (!li || justDragged) return;
       const idx = Number(li.dataset.index);
       if (e.target.closest('.del')) return deleteSlideAt(idx);
       if (e.target.closest('.rowbtn')) { show(idx, { instant: true }); return selectTab('slide'); }
@@ -754,9 +820,24 @@
       e.preventDefault(); e.stopPropagation();
       moveAt(Number(grip.closest('.item').dataset.index), e.key === 'ArrowUp' ? -1 : 1);
     });
+    let justDragged = false;
     listEl.addEventListener('pointerdown', e => {
-      const grip = e.target.closest('.grip'); if (!grip || e.button > 0) return;
-      startDrag(e, grip.closest('.item'));
+      const li = e.target.closest('.item[data-file]');
+      if (!li || e.button > 0 || e.target.closest('.del, .rowbtn')) return;
+      if (e.target.closest('.grip')) return startDrag(e, li);       // handle: drag right away
+      const x0 = e.clientX, y0 = e.clientY;                          // anywhere else on the row:
+      const cancel = () => { clearTimeout(hold); window.removeEventListener('pointermove', watch); window.removeEventListener('pointerup', cancel); window.removeEventListener('pointercancel', cancel); };
+      let lastMove = null;
+      const watch = ev => {
+        lastMove = ev;
+        const moved = Math.hypot(ev.clientX - x0, ev.clientY - y0);
+        if (e.pointerType === 'mouse' && moved > 5) { cancel(); startDrag(ev, li); }   // mouse: click-and-drag
+        else if (e.pointerType !== 'mouse' && moved > 8) cancel();                      // touch: they're scrolling the list
+      };
+      const hold = e.pointerType === 'mouse' ? 0 : setTimeout(() => { cancel(); navigator.vibrate?.(15); startDrag(lastMove || e, li); }, 350); // touch: press and hold
+      window.addEventListener('pointermove', watch);
+      window.addEventListener('pointerup', cancel);
+      window.addEventListener('pointercancel', cancel);
     });
 
     function startDrag(e, li) {
@@ -766,6 +847,8 @@
       ghost.classList.add('ghost'); ghost.style.cssText = `width:${rect.width}px;left:${rect.left}px;top:${rect.top}px`;
       document.body.append(ghost);
       li.classList.add('placeholder');
+      const noScroll = ev => ev.preventDefault();
+      window.addEventListener('touchmove', noScroll, { passive: false }); // keep the list from scrolling under a finger that is dragging
       let lastY = e.clientY, raf;
       const move = ev => {
         lastY = ev.clientY;
@@ -785,6 +868,8 @@
         window.removeEventListener('pointermove', move);
         window.removeEventListener('pointerup', done);
         window.removeEventListener('pointercancel', done);
+        window.removeEventListener('touchmove', noScroll);
+        justDragged = true; setTimeout(() => { justDragged = false; }, 120);
         ghost.remove(); li.classList.remove('placeholder');
         const order = [...listEl.querySelectorAll('.item[data-file]')].map(x => x.dataset.file);
         if (order.join('\n') !== files.join('\n')) applyOrder(order); else renderList();
@@ -844,6 +929,22 @@
     });
     function previewTransition() { const i = current; if (i < 1 || slides.length < 3) return; show(i === 1 ? 2 : i - 1, { instant: true }); show(i); }
     $('previewTx').onclick = previewTransition;
+    $('fSeconds').addEventListener('input', e => {
+      const f = files[current - 1]; if (!f) return;
+      const n = parseInt(e.target.value, 10), rec = edit(f);
+      if (n >= 2 && n <= 300) rec.seconds = n; else delete rec.seconds;
+      save(); if (playing) schedule();
+    });
+    $('fMotion').addEventListener('change', e => liveSlide(s => { s.motion = e.target.value; }));
+    function applyToAll(key, label) {
+      const f = files[current - 1]; if (!f) return;
+      const val = state.slides[f]?.[key] || 'default';
+      files.forEach(x => { if (val === 'default') { if (state.slides[x]) delete state.slides[x][key]; } else edit(x)[key] = val; });
+      save(); buildSlides(current);
+      toast(val === 'default' ? `${label} reset on all slides` : `${label} applied to all ${files.length} slides`);
+    }
+    $('applyTxAll').onclick = () => applyToAll('tx', 'Transition');
+    $('applyStyleAll').onclick = () => applyToAll('style', 'Style');
     $('resetSlide').onclick = () => { const f = files[current - 1]; if (!f) return; delete state.slides[f]; save(); refreshSlide(current); syncSlide(); toast('Slide reset'); };
     $('deleteSlide').onclick = () => deleteSlideAt(current);
     $('moveEarlier').onclick = () => moveAt(current, -1);
@@ -856,6 +957,8 @@
     $('oStyle').addEventListener('change', e => { state.opts.style = e.target.value; save(); buildSlides(current); });
     $('oMotion').addEventListener('change', e => { state.opts.motion = e.target.value; save(); buildSlides(current); });
     $('oSize').addEventListener('change', e => { state.opts.size = parseFloat(e.target.value); save(); applyOpts(); });
+    $('oLoop').addEventListener('change', e => setLoop(e.target.checked));
+    $('oCutoff').addEventListener('input', e => { const n = parseInt(e.target.value, 10); if (n >= 1900 && n <= 2100) { state.opts.cutoff = n; save(); buildSlides(current); } });
     $('oFilm').addEventListener('change', e => { state.opts.film = e.target.checked; save(); applyOpts(); });
     $('oSeconds').addEventListener('input', e => {
       const n = parseInt(e.target.value, 10);
@@ -896,6 +999,7 @@
 
     // ---------- Start ----------
     loadState();
+    $('loopBtn').classList.toggle('on', !!state.opts.loop); $('loopBtn').setAttribute('aria-pressed', String(!!state.opts.loop));
     applyTheme(); applyCover(); applyOpts(); buildThemeUi();
     fetch('photos.json').then(r => r.json()).then(list => {
       photos = list; byFile = Object.fromEntries(list.map(p => [p.file, p]));
@@ -910,6 +1014,9 @@
     $('previous').addEventListener('click', () => show(current - 1));
     $('next').addEventListener('click', () => show(current + 1));
     playPause.addEventListener('click', togglePlay);
+    $('restart').addEventListener('click', restart);
+    $('endRestart').addEventListener('click', restart);
+    $('loopBtn').addEventListener('click', () => setLoop(!state.opts.loop));
     fullscreenBtn.addEventListener('click', toggleFullscreen);
 
     document.addEventListener('keydown', event => {
@@ -920,7 +1027,8 @@
       else if (event.key === ' ') { event.preventDefault(); togglePlay(); }
       else if (event.key.toLowerCase() === 'f') toggleFullscreen();
       else if (event.key.toLowerCase() === 'e') (isEditing() ? closePanel() : openPanel());
-      else if (event.key === 'Escape' && isEditing()) closePanel();
+      else if (event.key === 'Escape') { if (isEditing()) closePanel(); else if (playing) { pause(); toast('Paused — press ▶ to keep going'); } }
+      else if (event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.metaKey) restart();
       else if (event.key === 'Home') show(0);
       else if (event.key === 'End') show(slides.length - 1);
       wake();
