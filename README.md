@@ -31,7 +31,8 @@ The slideshow is timed to seven songs (What a Wonderful World, When I Fall in Lo
 - **Default sections:** the dancing, wedding, party, birthday-celebration and playful photos (36 of them, marked with `"song": 5` in `photos.json`) are in **In the Mood**; the other photos are shared across the remaining songs in order. Change any of it with Send to / drag, or edit the `song` values in `photos.json` to change the default for everyone.
 - **Send to a song:** the ♪ button on any slide in the list, or **Send to…** at the top of the Slide tab, moves a slide into a song. You can also drag a slide into another song's section. You can also drag a slide and **drop it onto a song's bar**: while you drag, every song bar pulses green, and the one under your pointer glows brighter. The slide goes to the end of that song (even if the song is folded).
 - **Now playing:** outside full screen, a bar under the slideshow shows the current song, its artist and the time within it (“Up next” on the opening slide, “Paused on” when paused).
-- **Show** tab → **Songs:** turn the song timing on or off and change a song's length if your recording is a different length.
+- **Show** tab → **Songs:** turn the song timing on or off. Under **Adjust track length**, each song has − and + buttons (5 seconds a step, 30 with Shift) beside its time, which you can also type; a yellow time is one you changed. Drag a track by its ⠿ handle (or anywhere on the row; press and hold on a phone, or use Up/Down on the handle) to reorder the songs, and their slides move with them.
+- **Default transition** is Random (never repeats) on a fresh load and after Reset.
 
 ## Look
 

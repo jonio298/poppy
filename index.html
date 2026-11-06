@@ -313,8 +313,14 @@
     .sm-item.here { outline:2px solid var(--sc); outline-offset:-2px; }
     .sm-item i { flex:none; width:12px; height:36px; border-radius:6px; background:var(--sc); }
     .sm-item b { display:block; font-size:.9rem; } .sm-item small { display:block; color:#b9c4b9; font-size:.72rem; }
-    .songlen { display:flex; align-items:center; gap:10px; margin:0 0 8px; } .songlen i { flex:none; width:10px; height:28px; border-radius:5px; background:var(--sc); }
-    .songlen span { flex:1; min-width:0; font-size:.82rem; } .songlen input { width:84px; padding:8px 10px; border:1px solid rgba(255,255,255,.16); border-radius:8px; background:#0d130f; color:#f5f1e8; font-size:16px; text-align:center; }
+    .songlen { display:flex; align-items:center; gap:8px; margin:0 0 8px; border-radius:10px; } .songlen i { flex:none; width:10px; height:28px; border-radius:5px; background:var(--sc); }
+    .songlen .grip { width:24px; height:36px; } .songlen.placeholder { opacity:.35; }
+    .songlen span { flex:1; min-width:0; font-size:.82rem; line-height:1.25; overflow-wrap:anywhere; cursor:grab; }
+    .songlen input { flex:none; width:70px; padding:8px 6px; border:1px solid rgba(255,255,255,.16); border-radius:8px; background:#0d130f; color:#f5f1e8; font-size:16px; text-align:center; }
+    .songlen.custom input { border-color:#e8c070; color:#f3d98f; }
+    .songlen .step { flex:none; width:34px; height:36px; border:1px solid rgba(255,255,255,.18); border-radius:10px; background:transparent; color:#eee9dc; font:700 1.15rem Arial,sans-serif; cursor:pointer; }
+    .songlen .step:hover, .songlen .step:focus-visible { border-color:#d8ba7a; color:#d8ba7a; outline:none; }
+    .ghost-songrow { position:fixed; z-index:60; margin:0; padding:4px 6px 4px 0; pointer-events:none; background:#18221c; border:1px solid #d8ba7a; border-radius:10px; box-shadow:0 14px 34px rgba(0,0,0,.55); }
     body.no-tl .send, body.no-tl .sendbtn { display:none; }
     .range { display:flex; align-items:center; gap:12px; } .range input { flex:1; accent-color:#d8ba7a; height:32px; } .range output { min-width:46px; text-align:right; color:#d8ba7a; font:700 .85rem Arial,sans-serif; }
     body.editing .controls { display:none; }
@@ -539,6 +545,8 @@
       <div class="hr"></div>
       <span class="label">Songs</span>
       <label class="check"><input type="checkbox" id="oTimeline"> Time the slides to the songs</label>
+      <span class="label" style="margin-top:4px">Adjust track length</span>
+      <p class="note" style="margin:0 0 10px">Use − and + (5 seconds at a time; hold Shift for 30) or type a time. Drag ⠿ to reorder the tracks; their slides move with them. A yellow time is one you changed.</p>
       <div id="songLens"></div>
       <p class="note" id="songNote"></p>
       <div class="hr"></div>
@@ -1264,7 +1272,7 @@
     const activeTab = () => document.querySelector('.tab[aria-selected="true"]').dataset.tab;
 
     function fillSelect(sel, withDefault) {
-      sel.innerHTML = (withDefault ? '<option value="default">Use show default</option>' : '<option value="random">Random — shuffled, never the same twice in a row</option><option value="rotate">Go through them in order</option>')
+      sel.innerHTML = (withDefault ? '<option value="default">Use show default</option>' : '<option value="random">Random (never repeats)</option><option value="rotate">Go through them in order</option>')
         + EFFECTS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
     }
     fillSelect($('fTx'), true); fillSelect($('oTx'), false);
@@ -1298,11 +1306,12 @@
 
     function renderSongLens() {
       const box = $('songLens'); if (!box) return;
-      if (box.contains(document.activeElement)) return; // don't disturb typing
+      if (box.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return; // don't disturb typing
       box.innerHTML = '';
       state.songOrder.map(id => SONGS[id - 1]).forEach((sg, i) => {
-        const row = document.createElement('label'); row.className = 'songlen'; row.style.setProperty('--sc', sg.color);
-        row.innerHTML = '<i></i><span></span><input type="text" inputmode="numeric" aria-label="Length">';
+        const row = document.createElement('div');
+        row.className = 'songlen' + (state.songLens[sg.n] > 0 ? ' custom' : ''); row.dataset.song = sg.n; row.style.setProperty('--sc', sg.color);
+        row.innerHTML = `<button class="grip songgrip" type="button" aria-label="Move this track (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><i></i><span></span><button class="step" type="button" data-step="-5" aria-label="5 seconds shorter" title="5 seconds shorter (Shift: 30)">−</button><input type="text" inputmode="numeric" aria-label="Length"><button class="step" type="button" data-step="5" aria-label="5 seconds longer" title="5 seconds longer (Shift: 30)">+</button>`;
         row.querySelector('span').textContent = `${i + 1} · ${sg.title}`;
         const input = row.querySelector('input'); input.dataset.song = sg.n; input.value = fmtDur(songSecs(sg.n));
         box.append(row);
@@ -1449,14 +1458,14 @@
     const toggleSong = n => setSongCollapsed(n, !collapsed.has(n));
 
     // ---- Change a song's length right on its bar (type 3:05 or 185; leave it empty to go back to the recording's length) ----
-    function applySongLength(k, raw) {
+    function applySongLength(k, raw, quiet = false) {
       const text = String(raw).trim(), def = SONGS[k - 1].secs, m = text.match(/^(\d+):([0-5]?\d)$/);
       const secs = text === '' ? def : m ? Number(m[1]) * 60 + Number(m[2]) : parseInt(text, 10);
       if (!(secs >= 10 && secs <= 1200)) { toast('Type a length between 0:10 and 20:00, like 3:05.'); renderList(); return false; }
       if (secs === def) delete state.songLens[k]; else state.songLens[k] = secs;
       save(); renderList(); renderSongLens(); updateNowPlaying();
       const sec = timeline().byId[k];
-      toast(`“${sec.title}” is now ${fmtDur(secs)}${sec.files.length && sec.per ? `. Its ${sec.files.length} slides get ${sec.per.toFixed(1)}s each.` : '.'}`);
+      if (!quiet) toast(`“${sec.title}” is now ${fmtDur(secs)}${sec.files.length && sec.per ? `. Its ${sec.files.length} slides get ${sec.per.toFixed(1)}s each.` : '.'}`);
       return true;
     }
     function editSongLength(chip, sec) {
@@ -1617,15 +1626,38 @@
     function applySongOrder(order) {
       const prev = [...state.songOrder], cf = files[current - 1];
       const refocus = () => buildSlides(cf ? computeFiles().indexOf(cf) + 1 : 0);
-      state.songOrder = order; save(); refocus(); renderList();
-      toast('Songs reordered. Their slides moved with them.', () => { state.songOrder = prev; save(); refocus(); renderList(); });
+      state.songOrder = order; save(); refocus(); renderList(); renderSongLens();
+      toast('Songs reordered. Their slides moved with them.', () => { state.songOrder = prev; save(); refocus(); renderList(); renderSongLens(); });
+    }
+    function startSongRowDrag(e, row) { // the same song drag, from the Songs list in the Show tab
+      e.preventDefault();
+      const box = $('songLens'), rect = row.getBoundingClientRect(), offY = e.clientY - rect.top;
+      const ghost = row.cloneNode(true);
+      ghost.classList.add('ghost-songrow'); ghost.style.cssText = `width:${rect.width}px;left:${rect.left}px;top:${rect.top}px`;
+      document.body.append(ghost);
+      row.classList.add('placeholder');
+      const noScroll = ev => ev.preventDefault();
+      window.addEventListener('touchmove', noScroll, { passive: false });
+      const move = ev => {
+        ghost.style.top = `${ev.clientY - offY}px`;
+        const before = [...box.children].filter(el => el !== row).find(el => { const r = el.getBoundingClientRect(); return ev.clientY < r.top + r.height / 2; });
+        if (before) { if (row.nextElementSibling !== before) box.insertBefore(row, before); } else if (box.lastElementChild !== row) box.append(row);
+      };
+      const done = () => {
+        window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', done); window.removeEventListener('pointercancel', done); window.removeEventListener('touchmove', noScroll);
+        ghost.remove(); row.classList.remove('placeholder');
+        const order = [...box.children].map(el => Number(el.dataset.song));
+        if (order.join() !== state.songOrder.join()) applySongOrder(order); else renderSongLens();
+      };
+      window.addEventListener('pointermove', move); window.addEventListener('pointerup', done); window.addEventListener('pointercancel', done);
     }
     function moveSong(id, dir) {
       const o = [...state.songOrder], i = o.indexOf(id), j = i + dir;
       if (j < 0 || j >= o.length) return;
       [o[i], o[j]] = [o[j], o[i]];
+      const inShow = !!(document.activeElement && document.activeElement.closest('#songLens'));
       applySongOrder(o);
-      listEl.querySelector(`.sec[data-song="${id}"] .secgrip`)?.focus();
+      (inShow ?document.querySelector(`#songLens .songlen[data-song="${id}"] .songgrip`) : listEl.querySelector(`.sec[data-song="${id}"] .secgrip`))?.focus();
     }
     function startSongDrag(e, bar) {
       e.preventDefault();
@@ -1835,11 +1867,26 @@
     });
     $('songLens').addEventListener('change', e => {
       const inp = e.target.closest('input[data-song]'); if (!inp) return;
-      const k = Number(inp.dataset.song), m = inp.value.trim().match(/^(\d+):([0-5]?\d)$/);
-      const secs = m ? Number(m[1]) * 60 + Number(m[2]) : parseInt(inp.value, 10);
-      if (secs >= 10 && secs <= 1200) { if (secs === SONGS[k - 1].secs) delete state.songLens[k]; else state.songLens[k] = secs; save(); }
+      const k = Number(inp.dataset.song);
+      applySongLength(k, inp.value, true);
       inp.value = fmtDur(songSecs(k)); // snap a bad entry back to the real value
-      renderSongLens(); renderList(); updateNowPlaying();
+    });
+    $('songLens').addEventListener('click', e => { // minus / plus: 5 seconds at a time, 30 with Shift
+      const btn = e.target.closest('.step'); if (!btn) return;
+      const k = Number(btn.closest('.songlen').dataset.song), d = btn.dataset.step;
+      const next = Math.max(10, Math.min(1200, songSecs(k) + Number(d) * (e.shiftKey ? 6 : 1)));
+      applySongLength(k, String(next), true);
+      $('songLens').querySelector(`.songlen[data-song="${k}"] .step[data-step="${d}"]`)?.focus();
+    });
+    $('songLens').addEventListener('pointerdown', e => { // drag a track to reorder; its slides go with it
+      if (e.button > 0 || e.target.closest('input, .step')) return;
+      const row = e.target.closest('.songlen'); if (!row) return;
+      if (e.target.closest('.songgrip')) return startSongRowDrag(e, row);
+      armDrag(e, row, startSongRowDrag);
+    });
+    $('songLens').addEventListener('keydown', e => {
+      const g = e.target.closest('.songgrip');
+      if (g && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); e.stopPropagation(); moveSong(Number(g.closest('.songlen').dataset.song), e.key === 'ArrowUp' ? -1 : 1); }
     });
     $('collapseAll').onclick = () => keepPosition(() => SONGS.forEach(sg => setSongCollapsed(sg.n, true, false)));
     $('expandAll').onclick = () => keepPosition(() => SONGS.forEach(sg => setSongCollapsed(sg.n, false, false)));
