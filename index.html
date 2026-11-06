@@ -463,8 +463,9 @@
       <span class="label">Whole show</span>
       <label class="field"><span>Default transition</span><select id="oTx"></select></label>
       <label class="field"><span>Default photo style</span>
-        <select id="oStyle"><option value="auto">Automatic — Polaroid for older photos, borders for newer</option><option value="border">Thin white border</option><option value="rounded">Rounded white border</option><option value="matte">Cream mat</option><option value="framed">Gold frame</option><option value="polaroid">Polaroid snapshot</option><option value="film">Film strip</option><option value="plain">Plain (no border)</option></select></label>
+        <select id="oStyle"><option value="auto">Automatic (by year)</option><option value="border">Thin white border</option><option value="rounded">Rounded white border</option><option value="matte">Cream mat</option><option value="framed">Gold frame</option><option value="polaroid">Polaroid snapshot</option><option value="film">Film strip</option><option value="plain">Plain (no border)</option></select></label>
       <label class="field"><span>Polaroid look for photos older than (year)</span><input type="number" id="oCutoff" min="1900" max="2100" step="1"></label>
+      <p class="note">“Automatic” gives photos older than this year the Polaroid look and rotates different borders for newer ones.</p>
       <label class="field"><span>Seconds per photo</span><input type="number" id="oSeconds" min="2" max="120" step="1"></label>
       <p class="note" id="secondsNote"></p>
       <label class="field"><span>Ken Burns motion</span>
@@ -474,6 +475,9 @@
       <label class="field"><span>Default photo filter</span><select id="oFilter"></select></label>
       <label class="check"><input type="checkbox" id="oFilm"> Vintage film look (grain, vignette, warm tone)</label>
       <label class="check"><input type="checkbox" id="oLoop"> Auto-scroll: keep playing in a loop (starts over after the last photo)</label>
+      <div class="hr"></div>
+      <button class="btn" id="resetShowOpts" type="button" style="width:100%">Restore these settings to the defaults</button>
+      <p class="note" style="margin-top:10px">Puts everything on this tab (transitions, photo style and year, filter, motion, photo size, film look, loop, timing and song lengths) back to how the slideshow starts. Your slides, captions, order and theme are not changed. Press Save to keep it.</p>
     </div>
 
     <div class="pane" data-pane="versions" hidden>
@@ -1575,6 +1579,14 @@
     $('oMotion').addEventListener('change', e => { state.opts.motion = e.target.value; save(); buildSlides(current); });
     $('oSize').addEventListener('change', e => { state.opts.size = parseFloat(e.target.value); save(); applyOpts(); });
     $('oCoverSecs').addEventListener('input', e => { const n = parseInt(e.target.value, 10); state.opts.coverSeconds = n >= 2 && n <= 120 ? n : 12; save(); if (playing && current === 0) schedule(); });
+    $('resetShowOpts').onclick = () => {
+      if (!confirm('Put the settings on this tab back to the defaults? Your slides, captions, order and theme stay as they are.')) return;
+      const cf = files[current - 1];
+      state.opts = { ...defaults().opts }; state.songLens = {}; // the cover text and everything per-slide is left alone
+      save(); applyOpts(); setLoopUi();
+      buildSlides(cf ? computeFiles().indexOf(cf) + 1 : 0); syncShow(); if (isEditing()) renderList();
+      toast('Settings restored to the defaults. Press Save to keep this.');
+    };
     $('oTimeline').addEventListener('change', e => {
       const cf = files[current - 1];
       state.opts.timeline = e.target.checked; save(); applyOpts();
