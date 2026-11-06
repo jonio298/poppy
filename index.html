@@ -234,6 +234,10 @@
     .vacts { display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; } .vacts .btn { padding:8px 11px; font-size:.68rem; }
     .warn { margin:0 0 14px; padding:10px 12px; border:1px solid rgba(232,192,112,.5); border-radius:10px; background:rgba(232,192,112,.08); color:#e8c070; font-size:.8rem; }
     .drop { outline:3px dashed #d8ba7a; outline-offset:-10px; }
+    .tl-title { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:0 0 4px; color:#eee9dc; font:700 .78rem Arial,sans-serif; letter-spacing:.1em; text-transform:uppercase; }
+    .tl-title span { color:#b9c4b9; font-weight:400; letter-spacing:0; text-transform:none; font-size:.78rem; }
+    .tl-hint { margin:0 0 8px; } .note.quiet { color:#74857a; font-size:.74rem; }
+    body.no-tl .tl-title, body.no-tl .tl-hint, body.no-tl #audioNote { display:none; }
     .timeline { position:relative; display:flex; gap:2px; height:32px; margin:2px 0 8px; }
     .tseg { flex:1 1 0; min-width:0; padding:0; border:0; border-radius:6px; background:var(--sc); color:#141c17; font:700 .74rem Arial,sans-serif; cursor:pointer; }
     .tseg:hover, .tseg:focus-visible { filter:brightness(1.12); outline:none; } .tseg.empty { opacity:.35; }
@@ -376,9 +380,14 @@
     </div>
 
     <div class="pane" data-pane="slides">
-      <p class="note">Drag any slide up or down to reorder (press and hold on a phone). Tap a slide to preview it, <b>✎</b> to edit it, or the red <b style="color:#ff6b5e">✕</b> to delete it.</p>
+      <div class="tl-title"><b>Song timeline</b><span id="tlTotal"></span></div>
+      <p class="note tl-hint">Each colored box is one song. Tap a number to jump to that song. The white line marks the selected slide.</p>
       <div class="timeline" id="timeline" role="group" aria-label="Song timeline"></div>
       <p class="note" id="timelineNote"></p>
+      <p class="note quiet" id="audioNote">This page doesn’t play the songs. Start them on your own device.</p>
+      <div class="hr"></div>
+      <p class="note" style="margin-bottom:4px">Tap a slide to preview it. Drag it up or down to reorder.</p>
+      <p class="note quiet">♪ send to a song &nbsp;·&nbsp; ✎ edit &nbsp;·&nbsp; <span style="color:#ff6b5e">✕</span> delete</p>
       <button class="btn" id="addPhotos" type="button" style="width:100%;margin-bottom:12px">＋ Add my own photos</button>
       <input type="file" id="photoFile" accept="image/*" multiple hidden>
       <div class="listtools"><button class="linkbtn" id="collapseAll" type="button">Collapse all songs</button><button class="linkbtn" id="expandAll" type="button">Expand all</button></div>
@@ -1367,7 +1376,7 @@
     }
     function renderTimeline() {
       const el = $('timeline'); el.innerHTML = '';
-      if (!state.opts.timeline) { $('timelineNote').textContent = ''; return; }
+      if (!state.opts.timeline) { $('timelineNote').textContent = ''; $('tlTotal').textContent = ''; return; }
       const tl = timeline();
       tl.secs.forEach(sec => {
         const b = document.createElement('button');
@@ -1383,7 +1392,8 @@
       const head = $('tlHead'); if (!head || !state.opts.timeline || !files.length) return;
       const tl = timeline(), t = current === 0 ? 0 : slideStartSecs(current);
       head.style.left = `${(t / tl.total) * 100}%`;
-      $('timelineNote').textContent = `${current === 0 ? 'Opening slide' : `Slide ${current} starts at ${fmtDur(t)}`} · ${fmtDur(tl.total)} of music · ${files.length} slides. (This page doesn’t play audio: start the songs on your device.)`;
+      $('tlTotal').textContent = `${fmtDur(tl.total)} total · ${files.length} slides`;
+      $('timelineNote').textContent = current === 0 ? 'Selected: the opening slide (before the first song).' : `Selected: slide ${current}, starts ${fmtDur(t)} into the show.`;
     }
     function markNow() {
       updateTimelineHead();
