@@ -138,6 +138,15 @@
     @media (min-width:761px) { body:not(.fs) .portrait { align-self:start; height:min(75dvh,760px); margin-top:calc(6px - clamp(38px,7vw,110px)); } } /* outside full screen: lifted clear of the control bar and the credit */
     .madeby { position:absolute; right:clamp(14px,8vw,170px); bottom:calc(var(--safe-b) + 28px); margin:0; color:var(--text); opacity:.6; font:italic .78rem/1.2 var(--font, Georgia, serif); letter-spacing:.04em; text-shadow:0 1px 8px rgba(0,0,0,.6); pointer-events:none; }
     body.fs .madeby { bottom:calc(var(--safe-b) + 16px); }
+    .closing { background:radial-gradient(circle at 50% 50%, var(--glow) 0, var(--bg) 70%); }
+    .closing-copy { max-width:min(1000px, 88vw); text-align:center; }
+    .closing .rule { margin:0 auto 34px; background:linear-gradient(90deg, transparent, var(--accent), transparent); opacity:0; }
+    .slide.closing.active .rule { animation:rise 1.2s .2s ease both; }
+    .closing .cl-line { display:block; width:fit-content; margin:0 auto; padding:.1em .25em .25em; color:var(--text); font:italic clamp(2.2rem,7vw,5.6rem)/1.25 "Segoe Script","Bradley Hand","Brush Script MT",cursive; text-shadow:0 2px 24px color-mix(in srgb, var(--accent) 35%, transparent); clip-path:inset(0 100% 0 0); }
+    .closing .cl-line + .cl-line { font-size:clamp(1.5rem,4.6vw,3.6rem); margin-top:.35em; color:color-mix(in srgb, var(--text) 92%, var(--accent)); }
+    .slide.closing.active .cl-line { animation:writeOn var(--wd,2s) cubic-bezier(.4,.1,.35,1) var(--delay,0s) both; } /* the words are drawn in from left to right, as if being written */
+    @keyframes writeOn { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0 -2% 0 0); } }
+    @media (prefers-reduced-motion:reduce) { .closing .cl-line { clip-path:none !important; animation:none !important; } .closing .rule { opacity:1; animation:none !important; } }
     @keyframes rise { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
     .begin { margin-top:38px; min-height:48px; padding:14px 28px; border:1px solid color-mix(in srgb, var(--accent) 75%, transparent); border-radius:999px; background:color-mix(in srgb, var(--accent) 10%, transparent); color:var(--text); cursor:pointer; font:700 .82rem Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; transition:background .25s,color .25s; }
     .begin:hover:not(:disabled), .begin:focus-visible { background:var(--accent); color:var(--bg); outline:none; }
@@ -561,6 +570,7 @@
       <label class="field"><span>Small heading</span><input type="text" id="fEyebrow" maxlength="60"></label>
       <label class="field"><span>Name</span><input type="text" id="fTitle" maxlength="60"></label>
       <label class="field"><span>Nicknames / tagline</span><input type="text" id="fNames" maxlength="100"></label>
+      <label class="field"><span>Closing slide (after the last photo)</span><textarea id="fCredit" rows="2" maxlength="120" placeholder="Leave empty for no closing slide"></textarea></label>
       <label class="field"><span>Opening slide stays for (seconds)</span><input type="number" id="oCoverSecs" min="2" max="120" step="1" placeholder="12"></label>
       <div class="hr"></div>
       <span class="label">Songs</span>
@@ -669,7 +679,7 @@
     const builtinDefaults = () => ({
       v: 1,
       theme: { preset: 'forest', bg: null, accent: null, font: 'classic' },
-      cover: { eyebrow: 'In Loving Memory', title: 'Charles Ross', names: '“Charlie”   “Dad”   “Poppy”' },
+      cover: { eyebrow: 'In Loving Memory', title: 'Charles Ross', names: '“Charlie”   “Dad”   “Poppy”', closing: 'Thank You\nCharlie Loved All of Us' },
       opts: { timeline: true, tx: 'random', style: 'auto', cutoff: 1990, motion: 'classic', size: 99, film: true, loop: false, seconds: 0, coverSeconds: 12, filter: 'default' },
       slides: {}, order: [], deleted: [], custom: [], songMap: {}, songLens: {}, songOrder: [1, 2, 3, 4, 5, 6, 7],
     });
@@ -1009,8 +1019,8 @@
       tlCache = { secs, byId, total: start };
       return tlCache;
     }
-    function offsetInSong(i) { const k = songOf(files[i - 1]); let t = 0; for (let j = 1; j < i; j++) if (songOf(files[j - 1]) === k) t += slideMs(j) / 1000; return t; }
-    const slideStartSecs = i => timeline().byId[songOf(files[i - 1])].start + offsetInSong(i);
+    function offsetInSong(i) { const k = songOf(fileAt(i)); let t = 0; for (let j = 1; j < i; j++) if (songOf(files[j - 1]) === k) t += slideMs(j) / 1000; return t; }
+    const slideStartSecs = i => timeline().byId[songOf(fileAt(i))].start + offsetInSong(i);
 
     function computeFiles() {
       const known = state.order.filter(f => byFile[f]);
@@ -1044,6 +1054,7 @@
     function intervalMs() { return state.opts.seconds > 0 ? state.opts.seconds * 1000 : PLAYLIST_DURATION / Math.max(1, files.length); }
     function slideMs(i) {
       if (i === 0) return (state.opts.coverSeconds > 0 ? state.opts.coverSeconds : 12) * 1000; // the opening slide has its own time
+      if (i > files.length) return (state.opts.coverSeconds > 0 ? state.opts.coverSeconds : 12) * 1000; // the closing slide
       const f = files[i - 1], n = state.slides[f]?.seconds;
       if (n > 0) return n * 1000;
       if (state.opts.timeline) { const sec = timeline().byId[songOf(f)]; if (sec.per) return Math.round(sec.per * 1000); }
@@ -1120,12 +1131,33 @@
       return section;
     }
 
+    const hasClosing = () => !!(state.cover.closing || '').trim();
+    function renderClosing() { // the last slide: a line of thanks on the theme background
+      const el = document.createElement('section');
+      el.className = 'slide closing';
+      el.innerHTML = '<div class="closing-copy"><div class="rule"></div></div>';
+      fillClosing(el);
+      return el;
+    }
+    function fillClosing(el) { // each line is written in turn: the time it takes follows its length
+      const box = el.querySelector('.closing-copy');
+      box.querySelectorAll('.cl-line').forEach(l => l.remove());
+      let t = 0.9;
+      state.cover.closing.split('\n').map(x => x.trim()).filter(Boolean).forEach(text => {
+        const line = document.createElement('span'), wd = Math.max(1.2, text.length * 0.17);
+        line.className = 'cl-line'; line.textContent = text;
+        line.style.setProperty('--wd', `${wd.toFixed(2)}s`); line.style.setProperty('--delay', `${t.toFixed(2)}s`);
+        t += wd + 0.5; box.append(line);
+      });
+    }
+    const fileAt = i => files[Math.min(i, files.length) - 1]; // the closing slide counts as part of the last photo's song
     function buildSlides(focusIndex) {
       tlCache = null;
       files = computeFiles();
       slides.slice(1).forEach(s => s.remove());
       const frag = document.createDocumentFragment();
       files.forEach((f, i) => frag.append(renderSlide(f, i)));
+      if (hasClosing()) frag.append(renderClosing());
       stage.append(frag);
       slides = [$('cover'), ...stage.querySelectorAll('.slide:not(.cover)')];
       const target = Math.max(0, Math.min(focusIndex ?? 0, slides.length - 1));
@@ -1368,14 +1400,14 @@
       $('songNote').textContent = `Together ${fmtDur(total)}. Lengths are from the original recordings (the original slideshow was timed to 22:24); change one if your copy of the song is a different length. This page doesn’t play the songs: start them on your own device.`;
     }
     function syncShow() {
-      $('fEyebrow').value = state.cover.eyebrow; $('fTitle').value = state.cover.title; $('fNames').value = state.cover.names;
+      $('fEyebrow').value = state.cover.eyebrow; $('fTitle').value = state.cover.title; $('fNames').value = state.cover.names; $('fCredit').value = state.cover.closing || '';
       $('oTx').value = state.opts.tx; $('oStyle').value = state.opts.style; $('oMotion').value = state.opts.motion; $('oSize').value = String(state.opts.size); $('oFilm').checked = state.opts.film; $('oLoop').checked = !!state.opts.loop; $('oCutoff').value = state.opts.cutoff; $('oCoverSecs').value = state.opts.coverSeconds || 12; $('oFilter').value = state.opts.filter || 'default';
       $('oTimeline').checked = !!state.opts.timeline; renderSongLens();
       $('oSeconds').value = state.opts.seconds || '';
       syncShow2();
     }
     function syncSlide() {
-      const has = current > 0;
+      const has = current > 0 && current <= files.length; // the closing slide has nothing to edit here
       $('slideNone').hidden = has; $('slideForm').hidden = !has;
       if (!has) return;
       const f = files[current - 1], e = state.slides[f] || {};
@@ -1404,7 +1436,7 @@
       let sec, elapsed = 0, label;
       if (current === 0) { sec = tl.secs.find(x => x.files.length) || tl.secs[0]; label = 'Up next'; }
       else {
-        sec = tl.byId[songOf(files[current - 1])];
+        sec = tl.byId[songOf(fileAt(current))];
         label = playing ? 'Now playing' : 'Paused on';
         elapsed = Math.min(sec.secs, offsetInSong(current) + (playing ? (performance.now() - slideStart) / 1000 : 0));
       }
@@ -1910,6 +1942,10 @@
     // Show edits
     const bindText = (id, key) => $(id).addEventListener('input', e => { state.cover[key] = e.target.value; applyCover(); save(); });
     bindText('fEyebrow', 'eyebrow'); bindText('fTitle', 'title'); bindText('fNames', 'names');
+    $('fCredit').addEventListener('input', e => { // the closing slide: text changes live; adding or removing it rebuilds the show
+      const had = hasClosing(); state.cover.closing = e.target.value; save();
+      if (had !== hasClosing()) buildSlides(current); else { const c = stage.querySelector('.slide.closing'); if (c) { fillClosing(c); if (c.classList.contains('active')) { c.classList.remove('active'); void c.offsetWidth; c.classList.add('active'); } } }
+    });
     $('oTx').addEventListener('change', e => { state.opts.tx = e.target.value; save(); });
     $('oStyle').addEventListener('change', e => { state.opts.style = e.target.value; save(); buildSlides(current); });
     $('oMotion').addEventListener('change', e => { state.opts.motion = e.target.value; save(); buildSlides(current); });
