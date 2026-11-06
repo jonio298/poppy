@@ -53,19 +53,22 @@
     "file": "025_1987_Jitterbug contest at a birthday party 1987. We won!.webp",
     "caption": "Jitterbug contest at a birthday party 1987. We won!",
     "date": "80's",
-    "category": "Poppy dancing with Nanny"
+    "category": "Poppy dancing with Nanny",
+    "song": 5
   },
   {
     "file": "078_UNDATED_At Josh and Kiera's wedding.webp",
     "caption": "At Josh and Kiera's wedding",
     "date": "",
-    "category": "Poppy dancing with Nanny"
+    "category": "Poppy dancing with Nanny",
+    "song": 5
   },
   {
     "file": "048_2020-10-10_Carol & Charlie dancing at my wedding on October 10th, 2020. If I recall.webp",
     "caption": "Carol & Charlie dancing at my wedding on October 10th, 2020. If I recall correctly they won the contest for longest marriage in the room. You can see he's not properly wearing his face mask which was required by the venue! This was in the middle of the Covid-19 pandemic after all.",
     "date": "2020s",
-    "category": "Poppy dancing with Nanny"
+    "category": "Poppy dancing with Nanny",
+    "song": 5
   },
   {
     "file": "007_1958_Carol and Charlie McCaskey HS Prom 1958.webp",
@@ -84,50 +87,58 @@
     "file": "008_1959_Wedding 1959.webp",
     "caption": "Wedding 1959",
     "date": "50's",
-    "category": "Poppy and Nanny"
+    "category": "Poppy and Nanny",
+    "song": 5
   },
   {
     "file": "009_1959_Wedding 1959.webp",
     "caption": "Wedding 1959",
     "date": "50's",
-    "category": "Poppy and Nanny"
+    "category": "Poppy and Nanny",
+    "song": 5
   },
   {
     "file": "010_1959_Wedding, 1959.webp",
     "caption": "Wedding, 1959",
     "date": "50's",
-    "category": "Poppy and Nanny"
+    "category": "Poppy and Nanny",
+    "song": 5
   },
   {
     "file": "011_1959-07-18_July 18, 1959.webp",
     "caption": "July 18, 1959",
     "date": "50's",
-    "category": "Poppy and Nanny"
+    "category": "Poppy and Nanny",
+    "song": 5
   },
   {
     "file": "097_UNDATED_Carol & Charlie in Rusty & Rita Wedding 07081967.webp",
     "caption": "Carol & Charlie in Rusty & Rita Wedding 07081967",
     "date": "",
     "category": "Poppy and Nanny",
-    "year": 1967
+    "year": 1967,
+    "song": 5
   },
   {
     "file": "074_UNDATED_At a company holiday party.webp",
     "caption": "At a company holiday party.",
     "date": "",
-    "category": "Poppy and Nanny"
+    "category": "Poppy and Nanny",
+    "song": 5
   },
   {
     "file": "075_UNDATED_At Tammy's wedding.webp",
     "caption": "At Tammy's wedding",
     "date": "",
-    "category": "Poppy and Nanny"
+    "category": "Poppy and Nanny",
+    "song": 5
   },
   {
     "file": "076_UNDATED_Photo.webp",
     "caption": "",
     "date": "",
-    "category": "Poppy and Nanny"
+    "category": "Poppy and Nanny",
+    "song": 5
   },
   {
     "file": "084_UNDATED_Photo.webp",
@@ -145,19 +156,22 @@
     "file": "104_UNDATED_At Tammy's wedding.webp",
     "caption": "At Tammy's wedding",
     "date": "",
-    "category": "Poppy and Nanny"
+    "category": "Poppy and Nanny",
+    "song": 5
   },
   {
     "file": "035_1999_40th wedding anniversary at Accomac 1999.webp",
     "caption": "40th wedding anniversary at Accomac 1999",
     "date": "90's",
-    "category": "Poppy and Nanny"
+    "category": "Poppy and Nanny",
+    "song": 5
   },
   {
     "file": "103_UNDATED_40th wedding anniversary.webp",
     "caption": "40th wedding anniversary",
     "date": "",
-    "category": "Poppy and Nanny"
+    "category": "Poppy and Nanny",
+    "song": 5
   },
   {
     "file": "106_UNDATED_Photo.webp",
@@ -169,7 +183,8 @@
     "file": "105_UNDATED_At 50th wedding anniversary.webp",
     "caption": "At 50th wedding anniversary",
     "date": "",
-    "category": "Poppy and Nanny"
+    "category": "Poppy and Nanny",
+    "song": 5
   },
   {
     "file": "042_2015_Dads birthday, 2015.webp",
@@ -181,13 +196,15 @@
     "file": "047_2020_Nanny and Poppy at Kiera and Josh's wedding, October 2020.webp",
     "caption": "Nanny and Poppy at Kiera and Josh's wedding, October 2020",
     "date": "2020s",
-    "category": "Poppy and Nanny"
+    "category": "Poppy and Nanny",
+    "song": 5
   },
   {
     "file": "072_2025_Dad and mom at dad's 90th birthday celebration at Fiorentino's restauran.webp",
     "caption": "Dad and mom at dad's 90th birthday celebration at Fiorentino's restaurant February 2025",
     "date": "2020s",
-    "category": "Poppy and Nanny"
+    "category": "Poppy and Nanny",
+    "song": 5
   },
   {
     "file": "012_1960_1960.webp",
@@ -272,7 +289,8 @@
     "file": "022_1980_Williamsburg with Carisa around 1980.webp",
     "caption": "Williamsburg with Carisa around 1980",
     "date": "80's",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "114_UNDATED_Coaching girl's softball team.webp",
@@ -284,7 +302,8 @@
     "file": "023_1984-06-30_Walking Kathy down the aisle June 30 1984.webp",
     "caption": "Walking Kathy down the aisle June 30 1984",
     "date": "80's",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "024_1985_Family portrait around 1985.webp",
@@ -364,7 +383,8 @@
     "file": "115_UNDATED_Dancing at a wedding with Carisa.webp",
     "caption": "Dancing at a wedding with Carisa",
     "date": "",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "031_1994_1994.webp",
@@ -436,19 +456,22 @@
     "file": "096_UNDATED_Dad in his favorite element!.webp",
     "caption": "Dad in his favorite element!",
     "date": "",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "039_2000_Carisa's wedding May 2000.webp",
     "caption": "Carisa's wedding May 2000",
     "date": "2000s",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "040_2000_With Carisa May 2000.webp",
     "caption": "With Carisa May 2000",
     "date": "2000s",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "041_2003_Holding baby Jake 2003 ish.webp",
@@ -490,7 +513,8 @@
     "file": "091_UNDATED_81st birthday.webp",
     "caption": "81st birthday",
     "date": "",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "043_2020_Jon with Nanny and Poppy, Dec 2020.webp",
@@ -508,7 +532,8 @@
     "file": "045_2020_Dad’s birthday, 2020.webp",
     "caption": "Dad’s birthday, 2020",
     "date": "2020s",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "077_UNDATED_Photo.webp",
@@ -526,7 +551,8 @@
     "file": "112_UNDATED_Photo.webp",
     "caption": "",
     "date": "",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "113_UNDATED_Photo.webp",
@@ -538,7 +564,8 @@
     "file": "046_2020_Carisa and Dad at Josh and Kiera's wedding, October 2020.webp",
     "caption": "Carisa and Dad at Josh and Kiera's wedding, October 2020",
     "date": "2020s",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "049_2021_Visiting Carisa in Virginia, Memorial Day weekend, 2021.webp",
@@ -562,13 +589,15 @@
     "file": "102_UNDATED_These photos were taken at our wedding on 31921. You can see the care an.webp",
     "caption": "These photos were taken at our wedding on 3/19/21. You can see the care and compassion exude from Uncle Charlie’s face as he talked with me and his laughter was catching! He was always there for me in good times and bad and showed kindness, love and compassion when I needed it most. He made sure to always tell you he loved you. I will miss him always. I love you Uncle Charlie. ❤️❤️",
     "date": "",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "108_UNDATED_These photos were taken at our wedding on 31921. You can see the care an.webp",
     "caption": "These photos were taken at our wedding on 3/19/21. You can see the care and compassion exude from Uncle Charlie’s face as he talked with me and his laughter was catching! He was always there for me in good times and bad and showed kindness, love and compassion when I needed it most. He made sure to always tell you he loved you. I will miss him always. I love you Uncle Charlie. ❤️❤️",
     "date": "",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "052_2021_Visiting Carisa, Jake and Shayne, June 2021.webp",
@@ -598,25 +627,29 @@
     "file": "056_2023_Brian and Carisa's wedding 2023.webp",
     "caption": "Brian and Carisa's wedding 2023",
     "date": "2020s",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "057_2023_My wedding celebration 2023.webp",
     "caption": "My wedding celebration 2023",
     "date": "2020s",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "058_2023_My wedding celebration, 2023.webp",
     "caption": "My wedding celebration, 2023",
     "date": "2020s",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "059_2023_At Carisa's marriage to Brian July 2023.webp",
     "caption": "At Carisa's marriage to Brian July 2023",
     "date": "2020s",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "060_2023_Family, July 2023.webp",
@@ -652,7 +685,8 @@
     "file": "065_2024_Dad holding Jameson at Ezra's first birthday celebration at Josh and Kie.webp",
     "caption": "Dad holding Jameson at Ezra's first birthday celebration at Josh and Kiera's home - August of 2024.",
     "date": "2020s",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "066_2024_Father's Day at Sherwood Knoll 2024.webp",
@@ -670,7 +704,8 @@
     "file": "068_2025_Poppy's 91st birthday, Feb 2025.webp",
     "caption": "Poppy's 91st birthday, Feb 2025",
     "date": "2020s",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "069_2025_Charlie's great grandson with him on Charlie's birthday. Feb 22, 2025.webp",
@@ -688,7 +723,8 @@
     "file": "071_2025_Ezra Photo bomb, Holidays 2025.webp",
     "caption": "Ezra Photo bomb, Holidays 2025",
     "date": "2020s",
-    "category": "Poppy and his family"
+    "category": "Poppy and his family",
+    "song": 5
   },
   {
     "file": "073_2026_Dad at John Wright restaurant in honor of their 67th anniversary July 20.webp",

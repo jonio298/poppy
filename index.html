@@ -796,13 +796,20 @@
 
     // ---- Songs: every slide belongs to one song; a song's slides share its running time ----
     let defaultSongMap = {};
-    function buildDefaultSongs() { // the original photos are shared out across the songs in proportion to song length
+    function buildDefaultSongs() {
+      // Photos tagged with a "song" in photos.json (e.g. the dancing / wedding / party ones for "In the Mood") go to that song.
+      // The rest are shared out, in order, across the songs in proportion to each song's length, after allowing for the tagged ones.
       const total = SONGS.reduce((a, x) => a + x.secs, 0), n = basePhotos.length;
-      const raw = SONGS.map(x => n * x.secs / total), counts = raw.map(Math.floor);
-      const left = n - counts.reduce((a, b) => a + b, 0);
+      const tagged = p => p.song >= 1 && p.song <= SONGS.length;
+      const hinted = basePhotos.filter(tagged), rest = basePhotos.filter(p => !tagged(p));
+      const taggedPer = SONGS.map(x => hinted.filter(p => p.song === x.n).length);
+      const room = SONGS.map((x, i) => Math.max(0, n * x.secs / total - taggedPer[i])), roomSum = room.reduce((a, b) => a + b, 0) || 1;
+      const raw = room.map(r => r * rest.length / roomSum), counts = raw.map(Math.floor);
+      const left = rest.length - counts.reduce((a, b) => a + b, 0);
       raw.map((r, i) => [r - Math.floor(r), i]).sort((a, b) => b[0] - a[0]).slice(0, left).forEach(([, i]) => { counts[i]++; });
-      defaultSongMap = {}; let idx = 0;
-      counts.forEach((c, si) => { for (let j = 0; j < c; j++) defaultSongMap[basePhotos[idx++].file] = si + 1; });
+      defaultSongMap = {}; hinted.forEach(p => { defaultSongMap[p.file] = p.song; });
+      let idx = 0;
+      counts.forEach((c, si) => { for (let j = 0; j < c; j++) defaultSongMap[rest[idx++].file] = si + 1; });
     }
     const songOf = f => Math.min(SONGS.length, Math.max(1, Number(state.songMap[f]) || defaultSongMap[f] || SONGS.length)); // photos added later start in the last song
     const songSecs = k => (state.songLens[k] > 0 ? Number(state.songLens[k]) : SONGS[k - 1].secs);
