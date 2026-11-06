@@ -138,7 +138,8 @@
     .begin:disabled { cursor:wait; opacity:.55; }
     .begin.gone { opacity:0; visibility:hidden; pointer-events:none; transition:opacity .5s ease, visibility 0s .5s; } /* keeps its space so the title doesn't jump */
     .customize { position:absolute; top:calc(var(--safe-t) + 16px); right:18px; z-index:5; padding:9px 14px; border:1px solid color-mix(in srgb, var(--text) 22%, transparent); border-radius:999px; background:transparent; color:var(--muted); cursor:pointer; font:700 .68rem Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; }
-    .customize:hover, .customize:focus-visible { color:var(--accent); border-color:var(--accent); outline:none; }
+    .customize:hover, .customize:focus-visible, .customize.on { color:var(--accent); border-color:var(--accent); outline:none; }
+    .customize.on { background:color-mix(in srgb, var(--accent) 12%, transparent); }
 
     /* ---------- Controls ---------- */
     .chrome { z-index:10; pointer-events:none; opacity:0; transition:opacity .35s ease, right .35s ease; }
@@ -230,7 +231,7 @@
     .item[data-file] { cursor:grab; }
     .item.ghost { position:fixed; z-index:60; margin:0; pointer-events:none; box-shadow:0 14px 34px rgba(0,0,0,.55); border-color:#d8ba7a; opacity:.97; }
     .item.cover-row { padding-left:10px; }
-    .item img { flex:none; width:78px; height:66px; object-fit:cover; border-radius:6px; background:#0d130f; pointer-events:none; }
+    .item img { flex:none; width:78px; height:66px; object-fit:cover; border-radius:6px; background:#0d130f; -webkit-user-drag:none; user-select:none; cursor:zoom-in; }
     .grip { flex:none; width:30px; height:66px; border:0; border-radius:8px; background:transparent; color:#7d8f7d; cursor:grab; touch-action:none; display:grid; place-items:center; }
     .grip:hover, .grip:focus-visible { color:#d8ba7a; outline:none; } .grip svg { width:16px; height:16px; fill:currentColor; }
     .info { flex:1; min-width:0; pointer-events:none; }
@@ -260,18 +261,17 @@
     .drop { outline:3px dashed #d8ba7a; outline-offset:-10px; }
     .tl-title { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:0 0 4px; color:#eee9dc; font:700 .78rem Arial,sans-serif; letter-spacing:.1em; text-transform:uppercase; }
     .tl-title span { color:#b9c4b9; font-weight:400; letter-spacing:0; text-transform:none; font-size:.78rem; }
-    .tl-hint { margin:0 0 8px; } .note.quiet { color:#74857a; font-size:.74rem; }
-    body.no-tl .tl-title, body.no-tl .tl-hint, body.no-tl #audioNote { display:none; }
-    .timeline { position:relative; display:flex; gap:2px; height:32px; margin:2px 0 8px; }
-    .tseg { flex:1 1 0; min-width:0; padding:0; border:0; border-radius:6px; background:var(--sc); color:#141c17; font:700 .74rem Arial,sans-serif; cursor:pointer; }
-    .tseg:hover, .tseg:focus-visible { filter:brightness(1.12); outline:none; } .tseg.empty { opacity:.35; }
-    .tlhead { position:absolute; top:-3px; bottom:-3px; width:3px; margin-left:-1px; border-radius:2px; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.55); pointer-events:none; transition:left .3s ease; }
+    .note.quiet { color:#74857a; font-size:.74rem; }
     .sec { display:flex; align-items:center; gap:10px; margin:12px 0 2px; padding:9px 10px; border-radius:10px; border-left:5px solid var(--sc); background:color-mix(in srgb, var(--sc) 15%, #141c17); color:#eee9dc; font:400 .82rem/1.25 Arial,sans-serif; cursor:pointer; list-style:none; }
     .sec .num { flex:none; display:grid; place-items:center; width:26px; height:26px; border-radius:50%; background:var(--sc); color:#141c17; font:700 .8rem Arial,sans-serif; }
     .sec .nm { flex:1; min-width:0; } .sec b { display:block; font-size:.88rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .sec small { display:block; color:#b9c4b9; font-size:.72rem; } .sec.warn small { color:#f0c070; }
     .item[data-file] { box-shadow:inset 4px 0 0 var(--sc, transparent); }
     .item.folded { display:none; }
+    .thumbzoom { position:fixed; z-index:80; pointer-events:none; opacity:0; transform:scale(.9); transition:opacity .12s ease, transform .12s ease; border-radius:10px; overflow:hidden; background:#0d130f; border:2px solid #d8ba7a; box-shadow:0 18px 50px rgba(0,0,0,.6); }
+    .thumbzoom.show { opacity:1; transform:none; }
+    .thumbzoom img { display:block; width:100%; height:100%; object-fit:contain; }
+    .thumb img { -webkit-user-drag:none; cursor:zoom-in; }
     .list.sec-drag .item { display:none !important; }   /* while a song is being dragged, only the song bars show */
     .sec .secgrip { width:24px; height:30px; margin-left:-6px; }
     .sec.placeholder { opacity:.35; border-style:dashed; }
@@ -295,7 +295,7 @@
     .sm-item b { display:block; font-size:.9rem; } .sm-item small { display:block; color:#b9c4b9; font-size:.72rem; }
     .songlen { display:flex; align-items:center; gap:10px; margin:0 0 8px; } .songlen i { flex:none; width:10px; height:28px; border-radius:5px; background:var(--sc); }
     .songlen span { flex:1; min-width:0; font-size:.82rem; } .songlen input { width:84px; padding:8px 10px; border:1px solid rgba(255,255,255,.16); border-radius:8px; background:#0d130f; color:#f5f1e8; font-size:16px; text-align:center; }
-    body.no-tl .send, body.no-tl .sendbtn, body.no-tl .timeline, body.no-tl #timelineNote { display:none; }
+    body.no-tl .send, body.no-tl .sendbtn { display:none; }
     .range { display:flex; align-items:center; gap:12px; } .range input { flex:1; accent-color:#d8ba7a; height:32px; } .range output { min-width:46px; text-align:right; color:#d8ba7a; font:700 .85rem Arial,sans-serif; }
     body.editing .controls, body.editing .hint { display:none; }
     .endcard { position:fixed; z-index:12; left:50%; top:50%; transform:translate(-50%,-46%); opacity:0; pointer-events:none; transition:opacity .6s ease, transform .6s ease; }
@@ -409,12 +409,7 @@
     </div>
 
     <div class="pane" data-pane="slides">
-      <div class="tl-title"><b>Song timeline</b><span id="tlTotal"></span></div>
-      <p class="note tl-hint">Each colored box is one song. Tap a number to jump to that song. The white line marks the selected slide.</p>
-      <div class="timeline" id="timeline" role="group" aria-label="Song timeline"></div>
-      <p class="note" id="timelineNote"></p>
-      <p class="note quiet" id="audioNote">This page doesn’t play the songs. Start them on your own device.</p>
-      <div class="hr"></div>
+      <div class="tl-title"><b id="slidesTitle">Songs &amp; slides</b><span id="tlTotal"></span></div>
       <p class="note" style="margin-bottom:4px">Tap a slide to preview it. Drag it up or down to reorder.</p>
       <p class="note quiet">♪ send to a song &nbsp;·&nbsp; ✎ edit &nbsp;·&nbsp; <span style="color:#ff6b5e">✕</span> delete</p>
       <button class="btn" id="addPhotos" type="button" style="width:100%;margin-bottom:12px">＋ Add my own photos</button>
@@ -1190,12 +1185,12 @@
     function openPanel(tab) { // enter Edit mode
       if (playing) pause();
       document.body.classList.add('editing');
-      $('edit').classList.add('on');
+      $('edit').classList.add('on'); $('customize').classList.add('on'); $('customize').setAttribute('aria-pressed', 'true');
       selectTab(tab || 'slides');
     }
     function closePanel(startPlaying = false) { // back to Play mode
       document.body.classList.remove('editing');
-      $('edit').classList.remove('on');
+      $('edit').classList.remove('on'); $('customize').classList.remove('on'); $('customize').setAttribute('aria-pressed', 'false');
       if (startPlaying && slides.length > 1) { play(); wake(3000); }
     }
     const scrollMemo = {}; // each tab's scroll position, so switching tabs or closing the panel never loses your place
@@ -1260,7 +1255,7 @@
         box.append(row);
       });
       const total = SONGS.reduce((a, sg) => a + songSecs(sg.n), 0);
-      $('songNote').textContent = `Together ${fmtDur(total)}. Lengths are from the original recordings (the original slideshow was timed to 22:24); change one if your copy of the song is a different length.`;
+      $('songNote').textContent = `Together ${fmtDur(total)}. Lengths are from the original recordings (the original slideshow was timed to 22:24); change one if your copy of the song is a different length. This page doesn’t play the songs: start them on your own device.`;
     }
     function syncShow() {
       $('fEyebrow').value = state.cover.eyebrow; $('fTitle').value = state.cover.title; $('fNames').value = state.cover.names;
@@ -1405,7 +1400,7 @@
       listEl.innerHTML = '';
       const cover = document.createElement('li');
       cover.className = 'item cover-row'; cover.dataset.index = 0;
-      cover.innerHTML = `<img alt="" src="${thumbOf('098_UNDATED_Charlie Portrait.webp')}"><div class="info"><b>Opening slide</b><small></small></div><button class="rowbtn" type="button" aria-label="Edit opening slide">${ICON_PEN}</button>`;
+      cover.innerHTML = `<img alt="" draggable="false" src="${thumbOf('098_UNDATED_Charlie Portrait.webp')}"><div class="info"><b>Opening slide</b><small></small></div><button class="rowbtn" type="button" aria-label="Edit opening slide">${ICON_PEN}</button>`;
       cover.querySelector('small').textContent = `${state.cover.eyebrow} · ${state.cover.title}`;
       cover.onclick = e => { show(0, { instant: true }); if (e.target.closest('.rowbtn')) selectTab('show'); };
       listEl.append(cover);
@@ -1413,7 +1408,7 @@
         const li = document.createElement('li');
         li.className = 'item'; li.dataset.file = f; li.dataset.index = i + 1;
         if (state.opts.timeline) { li.style.setProperty('--sc', SONGS[songOf(f) - 1].color); li.dataset.song = songOf(f); if (collapsed.has(songOf(f))) li.classList.add('folded'); }
-        li.innerHTML = `<button class="grip" type="button" aria-label="Move slide ${i + 1} (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><img loading="lazy" decoding="async" alt="" src="${thumbOf(f)}"><div class="info"><b><i>${i + 1}</i> · </b><small></small></div><button class="rowbtn send" type="button" aria-label="Send slide ${i + 1} to a song" title="Send to a song">${ICON_NOTE}</button><button class="rowbtn" type="button" aria-label="Edit slide ${i + 1}">${ICON_PEN}</button><button class="del" type="button" aria-label="Delete slide ${i + 1}">${ICON_X}</button>`;
+        li.innerHTML = `<button class="grip" type="button" aria-label="Move slide ${i + 1} (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><img loading="lazy" decoding="async" alt="" draggable="false" src="${thumbOf(f)}"><div class="info"><b><i>${i + 1}</i> · </b><small></small></div><button class="rowbtn send" type="button" aria-label="Send slide ${i + 1} to a song" title="Send to a song">${ICON_NOTE}</button><button class="rowbtn" type="button" aria-label="Edit slide ${i + 1}">${ICON_PEN}</button><button class="del" type="button" aria-label="Delete slide ${i + 1}">${ICON_X}</button>`;
         li.querySelector('b').append(document.createTextNode(dateOf(f) || 'No date'));
         li.querySelector('small').textContent = (isOwn(f) ? 'Your photo · ' : '') + (captionOf(f) || byFile[f].caption || '').replace(/\s+/g, ' ').trim();
         return li;
@@ -1439,7 +1434,7 @@
         let n = 0;
         timeline().secs.forEach(sec => { listEl.append(makeHeader(sec)); sec.files.forEach(f => listEl.append(makeRow(f, n++))); });
       } else files.forEach((f, i) => listEl.append(makeRow(f, i)));
-      renderTimeline();
+      updateSlidesTitle();
       const gone = state.deleted.filter(f => byFile[f]);
       $('deletedBox').hidden = gone.length === 0;
       const del = $('gridDeleted'); del.innerHTML = '';
@@ -1447,26 +1442,9 @@
       if (!pane.hidden) pane.scrollTop = top;
       markNow(false);
     }
-    function renderTimeline() {
-      const el = $('timeline'); el.innerHTML = '';
-      if (!state.opts.timeline) { $('timelineNote').textContent = ''; $('tlTotal').textContent = ''; return; }
-      const tl = timeline();
-      tl.secs.forEach(sec => {
-        const b = document.createElement('button');
-        b.type = 'button'; b.className = 'tseg' + (sec.files.length ? '' : ' empty'); b.style.setProperty('--sc', sec.color); b.style.flexGrow = sec.secs; b.textContent = sec.pos;
-        b.title = `${sec.title} — ${sec.artist} · ${fmtDur(sec.secs)} · ${sec.files.length} slides`;
-        b.onclick = () => { if (collapsed.has(sec.n)) setSongCollapsed(sec.n, false); if (sec.files.length) show(files.indexOf(sec.files[0]) + 1, { instant: true }); listEl.querySelector(`.sec[data-song="${sec.n}"]`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }); };
-        el.append(b);
-      });
-      const head = document.createElement('div'); head.className = 'tlhead'; head.id = 'tlHead'; el.append(head);
-      updateTimelineHead();
-    }
-    function updateTimelineHead() {
-      const head = $('tlHead'); if (!head || !state.opts.timeline || !files.length) return;
-      const tl = timeline(), t = current === 0 ? 0 : slideStartSecs(current);
-      head.style.left = `${(t / tl.total) * 100}%`;
-      $('tlTotal').textContent = `${fmtDur(tl.total)} total · ${files.length} slides`;
-      $('timelineNote').textContent = current === 0 ? 'Selected: the opening slide (before the first song).' : `Selected: slide ${current}, starts ${fmtDur(t)} into the show.`;
+    function updateSlidesTitle() { // the heading above the list
+      $('slidesTitle').textContent = state.opts.timeline ? 'Songs & slides' : 'Slides';
+      $('tlTotal').textContent = state.opts.timeline ? `${fmtDur(timeline().total)} total · ${files.length} slides` : `${files.length} slides`;
     }
     function revealInPane(el) { // minimal scroll inside the list only (scrollIntoView can also shift the whole page)
       const pane = listEl.closest('.pane'), pr = pane.getBoundingClientRect(), r = el.getBoundingClientRect();
@@ -1474,7 +1452,6 @@
     }
     let revealedFile = null;
     function markNow(scroll = true, force = false) {
-      updateTimelineHead();
       let nowEl = null;
       listEl.querySelectorAll('.item').forEach(li => { const on = Number(li.dataset.index) === current; li.classList.toggle('now', on); if (on) nowEl = li; });
       listEl.querySelectorAll('.sec').forEach(h => h.classList.toggle('has-now', !!nowEl && nowEl.classList.contains('folded') && nowEl.dataset.song === h.dataset.song));
@@ -1486,7 +1463,7 @@
     function thumbBtn(file, label, cls) {
       const b = document.createElement('button');
       b.type = 'button'; b.className = `thumb ${cls || ''}`;
-      b.innerHTML = `<img loading="lazy" decoding="async" alt="" src="${thumbOf(file)}"><b>${label}</b>`;
+      b.innerHTML = `<img loading="lazy" decoding="async" alt="" draggable="false" src="${thumbOf(file)}"><b>${label}</b>`;
       return b;
     }
 
@@ -1808,13 +1785,38 @@
     ['dragleave', 'drop'].forEach(t => document.addEventListener(t, e => { if (t === 'dragleave' && e.relatedTarget) return; $('panel').classList.remove('drop'); }));
     document.addEventListener('drop', e => { if (isEditing() && e.dataTransfer?.files?.length) { e.preventDefault(); addPhotos(e.dataTransfer.files); } });
 
+    // ---- Hover a thumbnail to see it at 200% (mouse only; touch screens have no hover) ----
+    const zoomEl = document.createElement('div');
+    zoomEl.className = 'thumbzoom'; zoomEl.setAttribute('aria-hidden', 'true'); zoomEl.innerHTML = '<img alt="">';
+    document.body.append(zoomEl);
+    const ZOOM_SELECTOR = '#slideList .item img, #gridDeleted .thumb img';
+    let zoomTimer;
+    const hideZoom = () => { clearTimeout(zoomTimer); zoomEl.classList.remove('show'); };
+    document.addEventListener('mouseover', e => {
+      const img = matchMedia('(hover: hover)').matches && e.target.closest?.(ZOOM_SELECTOR);
+      if (!img) return;
+      const dragging = () => document.querySelector('.item.ghost, .ghost-sec');
+      if (dragging()) return hideZoom();
+      clearTimeout(zoomTimer);
+      zoomTimer = setTimeout(() => {
+        if (dragging()) return;
+        const r = img.getBoundingClientRect(), w = r.width * 2, h = r.height * 2;
+        zoomEl.firstChild.src = img.currentSrc || img.src;
+        zoomEl.style.width = `${w}px`; zoomEl.style.height = `${h}px`;
+        zoomEl.style.left = `${Math.max(8, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 8))}px`;   // centred on the thumbnail, kept on screen
+        zoomEl.style.top = `${Math.max(8, Math.min(r.top + r.height / 2 - h / 2, innerHeight - h - 8))}px`;
+        zoomEl.classList.add('show');
+      }, 100);
+    });
+    document.addEventListener('mouseout', e => { if (e.target.closest?.(ZOOM_SELECTOR)) hideZoom(); });
+    ['scroll', 'wheel', 'pointerdown', 'keydown'].forEach(t => document.addEventListener(t, hideZoom, true));
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => selectTab(t.dataset.tab)));
     $('modePlay').onclick = () => closePanel(true);
     $('saveBtn').onclick = commit;
     $('homeBtn').addEventListener('click', goHome); // back to the opening slide (and stop, like Esc)
     $('resetTop').onclick = resetClick;
     $('edit').onclick = () => (isEditing() ? closePanel() : openPanel());
-    $('customize').onclick = () => openPanel('slides');
+    $('customize').onclick = () => (isEditing() ? closePanel() : openPanel('slides')); // click again to fold the side menu away
 
     // ---------- Start ----------
     loadState(); markSaved(); setLoopUi();
