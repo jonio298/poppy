@@ -172,6 +172,11 @@
     .btn.danger:hover { background:rgba(228,112,96,.12); }
     .btn:disabled { opacity:.35; cursor:default; }
     .stack { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+    .group { margin:0 0 14px; padding:14px 14px 0; border:1px solid rgba(255,255,255,.1); border-radius:14px; background:rgba(255,255,255,.025); }
+    .group > h3 { margin:0 0 12px; color:#d8ba7a; font:700 .72rem Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; }
+    .group > .note { margin:-4px 0 12px; }
+    .btnrow { display:flex; gap:8px; margin:0 0 14px; } .btnrow .btn { flex:1 1 0; min-width:0; padding:11px 8px; text-align:center; }
+    .inline { display:flex; gap:8px; } .inline select { flex:1; min-width:0; } .inline .btn { flex:none; padding:0 14px; }
     .chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
     .chip { padding:9px 13px; border:1px solid rgba(255,255,255,.18); border-radius:999px; background:transparent; color:#eee9dc; font:600 .78rem Arial,sans-serif; cursor:pointer; }
     .chip[aria-pressed="true"] { border-color:#d8ba7a; background:rgba(216,186,122,.14); color:#d8ba7a; }
@@ -389,36 +394,48 @@
       <div id="slideForm">
         <p class="label" id="slideWhich">Slide 1 of 1</p>
         <button class="btn sendbtn" id="sendTo" type="button"><span id="sendLabel">♪ Send to a song…</span></button>
-        <label class="field"><span>Date label</span><input type="text" id="fDate" maxlength="40" placeholder="e.g. 1985 or Summer 1972"></label>
-        <label class="field"><span>Caption (optional)</span><textarea id="fCaption" maxlength="600" placeholder="Add a memory or a few words about this photo…"></textarea></label>
-        <div class="field"><span>Photo size</span>
-          <div class="range"><input type="range" id="fScale" min="30" max="100" step="1" value="100" aria-label="Photo size"><output id="fScaleOut">100%</output></div></div>
-        <label class="field"><span>Photo style</span>
-          <select id="fStyle"><option value="default">Use show default</option><option value="border">Thin white border</option><option value="rounded">Rounded white border</option><option value="matte">Cream mat</option><option value="framed">Gold frame</option><option value="polaroid">Polaroid snapshot</option><option value="film">Film strip</option><option value="plain">Plain (no border)</option></select></label>
-        <label class="field"><span>Filter</span><select id="fFilter"></select></label>
-        <div class="field" id="fFilterAmtWrap"><span>Filter strength</span>
-          <div class="range"><input type="range" id="fFilterAmt" min="0" max="100" step="1" value="100" aria-label="Filter strength"><output id="fFilterAmtOut">100%</output></div></div>
-        <label class="field"><span>Transition into this photo</span>
-          <select id="fTx"><option value="default">Use show default</option></select></label>
-        <label class="field"><span>Seconds on screen</span><input type="number" id="fSeconds" min="2" max="300" step="1" placeholder="Same as the rest of the show"></label>
-        <label class="field"><span>Ken Burns motion</span>
-          <select id="fMotion"><option value="default">Use show default</option><option value="classic">Classic (slow zoom + drift)</option><option value="gentle">Gentle</option><option value="off">Off (photo stays still)</option></select></label>
-        <div class="row stack">
-          <button class="btn" id="applyTxAll" type="button">Transition → all slides</button>
-          <button class="btn" id="applyStyleAll" type="button">Style → all slides</button>
-        </div>
-        <div class="row stack">
-          <button class="btn" id="applyFilterAll" type="button">Filter → all slides</button>
-        </div>
-        <div class="row stack">
-          <button class="btn" id="previewTx" type="button">▶ Preview transition</button>
+
+        <section class="group">
+          <h3>Text</h3>
+          <label class="field"><span>Date label</span><input type="text" id="fDate" maxlength="40" placeholder="e.g. 1985 or Summer 1972"></label>
+          <label class="field"><span>Caption (optional)</span><textarea id="fCaption" maxlength="600" placeholder="Add a memory or a few words about this photo…"></textarea></label>
+        </section>
+
+        <section class="group">
+          <h3>How the photo looks</h3>
+          <div class="field"><span>Photo size</span>
+            <div class="range"><input type="range" id="fScale" min="30" max="100" step="1" value="100" aria-label="Photo size"><output id="fScaleOut">100%</output></div></div>
+          <label class="field"><span>Photo style</span>
+            <select id="fStyle"><option value="default">Use show default</option><option value="border">Thin white border</option><option value="rounded">Rounded white border</option><option value="matte">Cream mat</option><option value="framed">Gold frame</option><option value="polaroid">Polaroid snapshot</option><option value="film">Film strip</option><option value="plain">Plain (no border)</option></select></label>
+          <label class="field"><span>Filter</span><select id="fFilter"></select></label>
+          <div class="field" id="fFilterAmtWrap"><span>Filter strength</span>
+            <div class="range"><input type="range" id="fFilterAmt" min="0" max="100" step="1" value="100" aria-label="Filter strength"><output id="fFilterAmtOut">100%</output></div></div>
+          <label class="field"><span>Ken Burns motion (slow zoom)</span>
+            <select id="fMotion"><option value="default">Use show default</option><option value="classic">Classic (slow zoom + drift)</option><option value="gentle">Gentle</option><option value="off">Off (photo stays still)</option></select></label>
+        </section>
+
+        <section class="group">
+          <h3>When it plays</h3>
+          <div class="field"><span>Transition into this photo</span>
+            <div class="inline"><select id="fTx"><option value="default">Use show default</option></select><button class="btn" id="previewTx" type="button" title="Play the transition into this photo">▶ Preview</button></div></div>
+          <label class="field"><span>Seconds on screen</span><input type="number" id="fSeconds" min="2" max="300" step="1" placeholder="Same as the rest of the show"></label>
+        </section>
+
+        <section class="group">
+          <h3>Position</h3>
+          <div class="btnrow"><button class="btn" id="moveEarlier" type="button">← Move earlier</button><button class="btn" id="moveLater" type="button">Move later →</button></div>
+        </section>
+
+        <section class="group">
+          <h3>Use this slide’s choices on every slide</h3>
+          <p class="note">Copies the transition, style or filter picked above onto all slides.</p>
+          <div class="btnrow"><button class="btn" id="applyTxAll" type="button">Transition</button><button class="btn" id="applyStyleAll" type="button">Style</button><button class="btn" id="applyFilterAll" type="button">Filter</button></div>
+        </section>
+
+        <div class="btnrow">
           <button class="btn" id="resetSlide" type="button">Reset this slide</button>
+          <button class="btn danger" id="deleteSlide" type="button">✕ Delete slide</button>
         </div>
-        <div class="row stack">
-          <button class="btn" id="moveEarlier" type="button">← Earlier</button>
-          <button class="btn" id="moveLater" type="button">Later →</button>
-        </div>
-        <button class="btn danger" id="deleteSlide" type="button" style="width:100%">✕ Delete this slide</button>
       </div>
     </div>
 
