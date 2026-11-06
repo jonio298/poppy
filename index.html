@@ -132,6 +132,15 @@
     /* ---------- Controls ---------- */
     .chrome { z-index:10; pointer-events:none; opacity:0; transition:opacity .35s ease, right .35s ease; }
     body.controls-visible .chrome, body.editing .chrome { opacity:1; }
+    .homebtn { position:absolute; z-index:3; left:clamp(12px,3vw,24px); top:calc(var(--safe-t) + 12px); width:42px; height:42px; display:grid; place-items:center; border:1px solid color-mix(in srgb, var(--text) 20%, transparent); border-radius:50%; background:color-mix(in srgb, var(--bg) 72%, transparent); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); color:var(--text); cursor:pointer; pointer-events:auto; }
+    .homebtn svg { width:20px; height:20px; fill:currentColor; }
+    .homebtn:hover, .homebtn:focus-visible { color:var(--accent); border-color:var(--accent); outline:none; }
+    body:not(.controls-visible):not(.editing) .homebtn { pointer-events:none; }
+    body.on-cover .homebtn { display:none; }
+    .topline span:first-child { margin-left:54px; }
+    .suggestrow { padding:0 18px 8px; }
+    .suggestbtn { width:100%; display:flex; align-items:center; justify-content:center; gap:8px; border-color:rgba(216,186,122,.6); color:#d8ba7a; }
+    .suggestbtn:hover { background:rgba(216,186,122,.12); }
     .topline { position:absolute; top:0; left:0; right:0; padding:calc(var(--safe-t) + 18px) clamp(18px,4vw,56px) 40px; display:flex; justify-content:space-between; gap:12px; background:linear-gradient(color-mix(in srgb, var(--bg) 85%, transparent), transparent); font:700 .7rem Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
     .controls { position:absolute; left:50%; bottom:calc(var(--safe-b) + 18px); transform:translateX(-50%); display:flex; gap:4px; padding:8px; border-radius:999px; background:color-mix(in srgb, var(--bg) 78%, transparent); border:1px solid color-mix(in srgb, var(--text) 14%, transparent); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); pointer-events:auto; }
     body:not(.controls-visible):not(.editing) .controls { pointer-events:none; }
@@ -248,6 +257,13 @@
     .sec small { display:block; color:#b9c4b9; font-size:.72rem; } .sec.warn small { color:#f0c070; }
     .item[data-file] { box-shadow:inset 4px 0 0 var(--sc, transparent); }
     .item.folded { display:none; }
+    .list.sec-drag .item { display:none !important; }   /* while a song is being dragged, only the song bars show */
+    .sec .secgrip { width:24px; height:30px; margin-left:-6px; }
+    .sec.placeholder { opacity:.35; border-style:dashed; }
+    .ghost-sec { position:fixed; z-index:60; margin:0; pointer-events:none; box-shadow:0 14px 34px rgba(0,0,0,.55); opacity:.97; }
+    .chapters { list-style:none; margin:6px 0 4px; padding:0; display:flex; flex-direction:column; gap:6px; }
+    .chapters li { padding:8px 10px; border-radius:8px; border-left:4px solid var(--sc); background:color-mix(in srgb, var(--sc) 12%, #18221c); }
+    .chapters b { display:block; font-size:.82rem; } .chapters small { display:block; margin-top:2px; color:#b9c4b9; font-size:.74rem; line-height:1.35; }
     @media (max-width:520px) { .item { gap:6px; } .rowbtn, .del { width:32px; height:32px; } .info small { white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; } }
     .sec .chev { flex:none; padding-left:4px; color:#b9c4b9; font-size:1rem; }
     .sec:focus-visible { outline:2px solid var(--sc); outline-offset:2px; }
@@ -338,6 +354,7 @@
 
   <div class="chrome" aria-label="Slideshow controls">
     <div class="topline"><span id="topTitle">In Loving Memory · Charles Ross</span><span id="counter">Opening</span></div>
+    <button class="homebtn" id="homeBtn" type="button" aria-label="Home: back to the opening slide" title="Home: back to the opening slide"><svg viewBox="0 0 24 24"><path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg></button>
     <div class="hint">Arrow keys to navigate · Space to pause · R to restart · F for full screen · E to edit · Esc for the main page</div>
     <div class="controls">
       <button class="control" id="previous" aria-label="Previous photo"><svg viewBox="0 0 24 24"><path d="M15.4 5.4 14 4 6 12l8 8 1.4-1.4L8.8 12z"/></svg></button>
@@ -370,6 +387,7 @@
         <button class="btn small primary" id="saveBtn" type="button" title="Save this version on this device (Ctrl+S)">Save</button>
       </div>
     </div>
+    <div class="suggestrow"><button class="btn suggestbtn" id="suggestBtn" type="button" title="Open the show I designed around the songs and Poppy’s life">✦ Suggested slide show</button></div>
     <div class="savestate" id="saveState" aria-live="polite"></div>
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="slides" aria-selected="true">Slides</button>
@@ -494,6 +512,10 @@
       <p class="note">Every time you press <b>Save</b>, a version is kept here with its date and time. The one marked <b>Opens on reload</b> is what loads when you come back to this page on this device.</p>
       <div class="warn" id="versionWarn" hidden></div>
       <ul class="list" id="versionList"></ul>
+      <div class="hr"></div>
+      <span class="label">Suggested shows</span>
+      <p class="note">Ready-made orders you can open and then change. Opening one is unsaved until you press <b>Save</b>.</p>
+      <ul class="list" id="suggestedList"></ul>
     </div>
 
     <div class="pane" data-pane="theme" hidden>
@@ -568,7 +590,7 @@
       theme: { preset: 'forest', bg: null, accent: null, font: 'classic' },
       cover: { eyebrow: 'In Loving Memory', title: 'Charles Ross', names: '“Charlie”   “Dad”   “Poppy”' },
       opts: { timeline: true, tx: 'random', style: 'auto', cutoff: 1990, motion: 'classic', size: 99, film: true, loop: false, seconds: 0, coverSeconds: 12, filter: 'default' },
-      slides: {}, order: [], deleted: [], custom: [], songMap: {}, songLens: {},
+      slides: {}, order: [], deleted: [], custom: [], songMap: {}, songLens: {}, songOrder: [1, 2, 3, 4, 5, 6, 7],
     });
     let state = defaults();
     let storageOk = true;
@@ -605,6 +627,7 @@
         custom: Array.isArray(s.custom) ? s.custom.filter(c => c && typeof c.id === 'string') : [],
         songMap: s.songMap && typeof s.songMap === 'object' && !Array.isArray(s.songMap) ? s.songMap : {},
         songLens: s.songLens && typeof s.songLens === 'object' && !Array.isArray(s.songLens) ? s.songLens : {},
+        songOrder: Array.isArray(s.songOrder) && s.songOrder.length === SONGS.length && SONGS.every(x => s.songOrder.map(Number).includes(x.n)) ? s.songOrder.map(Number) : SONGS.map(x => x.n),
       };
     }
     // `state` is the working copy. Nothing is stored until Save is pressed; reloading always opens the version marked "Opens on reload".
@@ -814,6 +837,37 @@
       if (isEditing()) { renderList(); syncSlide(); }
       updateSaveUi();
     }
+    // ---- Suggested shows (ready-made song orders and picture choices, shipped in suggested-shows.json) ----
+    let suggested = [];
+    function renderSuggested() {
+      const list = $('suggestedList'); if (!list) return;
+      list.innerHTML = '';
+      suggested.forEach(sg => {
+        const li = document.createElement('li');
+        li.className = 'ver'; li.dataset.id = sg.id;
+        li.innerHTML = '<div class="vtop"><b></b></div><div class="vmeta"></div><ol class="chapters"></ol><div class="vacts"><button class="btn" data-act="open-suggested" type="button">Open this show</button></div>';
+        li.querySelector('b').textContent = sg.name;
+        li.querySelector('.vmeta').textContent = sg.summary;
+        const ol = li.querySelector('.chapters');
+        sg.chapters.forEach((c, i) => {
+          const it = document.createElement('li');
+          it.style.setProperty('--sc', SONGS[c.song - 1].color);
+          it.innerHTML = '<b></b><small></small>';
+          it.querySelector('b').textContent = `${i + 1} · ${SONGS[c.song - 1].title}: ${c.theme}`;
+          it.querySelector('small').textContent = `${c.slides} slides. ${c.mood}`;
+          ol.append(it);
+        });
+        list.append(li);
+      });
+    }
+    async function openSuggested(id) {
+      const sg = suggested.find(x => x.id === id); if (!sg) return;
+      if (isDirty() && !confirm('You have unsaved changes. Open this suggested show anyway? Your unsaved changes will be lost.')) return;
+      state = normalize({ songOrder: sg.songOrder, songMap: sg.songMap, order: sg.order });
+      await applyState(0); renderVersions();
+      toast(`Opened “${sg.name}”. Press Save to keep it as a version.`);
+    }
+    $('suggestedList').addEventListener('click', e => { const b = e.target.closest('button[data-act="open-suggested"]'); if (b) openSuggested(b.closest('.ver').dataset.id); });
     function resetClick() {
       if (isDirty()) {
         if (!confirm('Throw away your unsaved changes and go back to the last saved version?')) return;
@@ -853,11 +907,13 @@
     }
     const songOf = f => Math.min(SONGS.length, Math.max(1, Number(state.songMap[f]) || defaultSongMap[f] || SONGS.length)); // photos added later start in the last song
     const songSecs = k => (state.songLens[k] > 0 ? Number(state.songLens[k]) : SONGS[k - 1].secs);
+    const songPos = k => state.songOrder.indexOf(k) + 1; // where a song sits in the show (1 = first)
     let tlCache = null;
-    function timeline() { // the songs laid over the current slide order
+    function timeline() { // the songs, in the current song order, laid over the current slide order
       if (tlCache) return tlCache;
-      const secs = SONGS.map(x => ({ ...x, secs: songSecs(x.n), files: [], start: 0, per: 0 }));
-      files.forEach(f => secs[songOf(f) - 1].files.push(f));
+      const byId = {};
+      const secs = state.songOrder.map((id, i) => (byId[id] = { ...SONGS[id - 1], secs: songSecs(id), pos: i + 1, files: [], start: 0, per: 0 }));
+      files.forEach(f => byId[songOf(f)].files.push(f));
       let start = 0;
       secs.forEach(sec => {
         sec.start = start; start += sec.secs;
@@ -865,17 +921,17 @@
         const fixed = sec.files.reduce((a, f) => a + own(f), 0), free = sec.files.filter(f => !own(f)).length;
         sec.per = free ? Math.max(1, (sec.secs - fixed) / free) : 0;
       });
-      tlCache = { secs, total: start };
+      tlCache = { secs, byId, total: start };
       return tlCache;
     }
     function offsetInSong(i) { const k = songOf(files[i - 1]); let t = 0; for (let j = 1; j < i; j++) if (songOf(files[j - 1]) === k) t += slideMs(j) / 1000; return t; }
-    const slideStartSecs = i => timeline().secs[songOf(files[i - 1]) - 1].start + offsetInSong(i);
+    const slideStartSecs = i => timeline().byId[songOf(files[i - 1])].start + offsetInSong(i);
 
     function computeFiles() {
       const known = state.order.filter(f => byFile[f]);
       const rest = photos.map(p => p.file).filter(f => !known.includes(f));
       const list = [...known, ...rest].filter(f => !state.deleted.includes(f));
-      return state.opts.timeline ? list.sort((a, b) => songOf(a) - songOf(b)) : list; // sections stay together (the sort is stable)
+      return state.opts.timeline ? list.sort((a, b) => songPos(songOf(a)) - songPos(songOf(b))) : list; // sections stay together (the sort is stable)
     }
     const edit = f => state.slides[f] || (state.slides[f] = {});
     const dateOf = f => { const e = state.slides[f]; return e && e.date !== undefined ? e.date : (byFile[f].date || ''); };
@@ -903,7 +959,7 @@
       if (i === 0) return (state.opts.coverSeconds > 0 ? state.opts.coverSeconds : 12) * 1000; // the opening slide has its own time
       const f = files[i - 1], n = state.slides[f]?.seconds;
       if (n > 0) return n * 1000;
-      if (state.opts.timeline) { const sec = timeline().secs[songOf(f) - 1]; if (sec.per) return Math.round(sec.per * 1000); }
+      if (state.opts.timeline) { const sec = timeline().byId[songOf(f)]; if (sec.per) return Math.round(sec.per * 1000); }
       return intervalMs();
     }
 
@@ -1193,10 +1249,10 @@
       const box = $('songLens'); if (!box) return;
       if (box.contains(document.activeElement)) return; // don't disturb typing
       box.innerHTML = '';
-      SONGS.forEach(sg => {
+      state.songOrder.map(id => SONGS[id - 1]).forEach((sg, i) => {
         const row = document.createElement('label'); row.className = 'songlen'; row.style.setProperty('--sc', sg.color);
         row.innerHTML = '<i></i><span></span><input type="text" inputmode="numeric" aria-label="Length">';
-        row.querySelector('span').textContent = `${sg.n} · ${sg.title}`;
+        row.querySelector('span').textContent = `${i + 1} · ${sg.title}`;
         const input = row.querySelector('input'); input.dataset.song = sg.n; input.value = fmtDur(songSecs(sg.n));
         box.append(row);
       });
@@ -1229,9 +1285,9 @@
       const fa = e.filterAmt ?? 100; $('fFilterAmt').value = fa; $('fFilterAmtOut').textContent = `${fa}%`;
       $('fFilterAmtWrap').hidden = !filterCss(slideFilter(f).name, 100);
       if (document.activeElement !== $('fSeconds')) $('fSeconds').value = e.seconds || '';
-      const sk = songOf(f), ss = SONGS[sk - 1], sec = timeline().secs[sk - 1];
+      const sk = songOf(f), ss = SONGS[sk - 1], sec = timeline().byId[sk];
       $('sendTo').style.setProperty('--sc', ss.color);
-      $('sendLabel').textContent = `♪ Song ${sk} · ${ss.title} — Send to…`;
+      $('sendLabel').textContent = `♪ Song ${sec.pos} · ${ss.title} — Send to…`;
       $('fSeconds').placeholder = state.opts.timeline && sec.per ? `From the song: ${sec.per.toFixed(1)}s` : 'Same as the rest of the show';
       $('moveEarlier').disabled = current <= 1; $('moveLater').disabled = current >= files.length;
     }
@@ -1245,13 +1301,13 @@
       let sec, elapsed = 0, label;
       if (current === 0) { sec = tl.secs.find(x => x.files.length) || tl.secs[0]; label = 'Up next'; }
       else {
-        sec = tl.secs[songOf(files[current - 1]) - 1];
+        sec = tl.byId[songOf(files[current - 1])];
         label = playing ? 'Now playing' : 'Paused on';
         elapsed = Math.min(sec.secs, offsetInSong(current) + (playing ? (performance.now() - slideStart) / 1000 : 0));
       }
       bar.style.setProperty('--sc', sec.color);
       $('npState').textContent = label;
-      $('npTitle').textContent = `${sec.n} · ${sec.title}`;
+      $('npTitle').textContent = `${sec.pos} · ${sec.title}`;
       $('npArtist').textContent = sec.artist;
       $('npTime').textContent = `${fmtDur(elapsed)} / ${fmtDur(sec.secs)}`;
       $('npFill').style.width = `${Math.min(100, (elapsed / sec.secs) * 100)}%`;
@@ -1269,7 +1325,7 @@
         const b = document.createElement('button');
         b.type = 'button'; b.className = 'sm-item' + (sec.n === here ? ' here' : ''); b.style.setProperty('--sc', sec.color);
         b.innerHTML = '<i></i><span><b></b><small></small></span>';
-        b.querySelector('b').textContent = `${sec.n} · ${sec.title}`;
+        b.querySelector('b').textContent = `${sec.pos} · ${sec.title}`;
         b.querySelector('small').textContent = `${sec.artist} · ${fmtDur(sec.secs)} · ${sec.files.length} slide${sec.files.length === 1 ? '' : 's'}${sec.per ? ` · ${sec.per.toFixed(1)}s each` : ''}${sec.n === here ? ' · it’s here now' : ''}`;
         b.onclick = () => { closeSendMenu(); sendTo(file, sec.n); };
         list.append(b);
@@ -1285,10 +1341,10 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !sendMenu.hidden) { closeSendMenu(); e.stopImmediatePropagation(); } }, true);
     function sendTo(file, k, where = 'end', refocus = false) {
       const prev = { order: [...state.order], map: { ...state.songMap }, at: files.indexOf(file) + 1 };
-      const cur = files.filter(f => f !== file), songs = cur.map(songOf), last = songs.lastIndexOf(k);
+      const kp = songPos(k), cur = files.filter(f => f !== file), songs = cur.map(f => songPos(songOf(f))), last = songs.lastIndexOf(kp);
       let idx;
-      if (last >= 0) idx = where === 'end' ? last + 1 : songs.indexOf(k);
-      else { const nxt = songs.findIndex(x => x > k); idx = nxt < 0 ? cur.length : nxt; }
+      if (last >= 0) idx = where === 'end' ? last + 1 : songs.indexOf(kp);
+      else { const nxt = songs.findIndex(x => x > kp); idx = nxt < 0 ? cur.length : nxt; }
       cur.splice(idx, 0, file);
       const map = { ...state.songMap };
       if (k === (defaultSongMap[file] || SONGS.length)) delete map[file]; else map[file] = k;
@@ -1296,8 +1352,8 @@
       if (collapsed.has(k)) { collapsed.delete(k); saveCollapsed(); } // show where it landed
       buildSlides(cur.indexOf(file) + 1); renderList();
       if (refocus) listEl.querySelector(`.item[data-file="${CSS.escape(file)}"] .grip`)?.focus();
-      const sec = timeline().secs[k - 1];
-      toast(`Sent to ♪ ${k} · ${sec.title}: now ${sec.files.length} slide${sec.files.length === 1 ? '' : 's'}${sec.per ? `, ${sec.per.toFixed(1)}s each` : ''}.`, () => {
+      const sec = timeline().byId[k];
+      toast(`Sent to ♪ ${sec.pos} · ${sec.title}: now ${sec.files.length} slide${sec.files.length === 1 ? '' : 's'}${sec.per ? `, ${sec.per.toFixed(1)}s each` : ''}.`, () => {
         state.order = prev.order; state.songMap = prev.map; save(); buildSlides(prev.at); renderList();
       });
     }
@@ -1350,16 +1406,16 @@
         h.className = 'sec'; h.dataset.song = sec.n; h.style.setProperty('--sc', sec.color);
         const fast = n && sec.per && sec.per < 5, slow = n && sec.per > 30;
         if (!n || fast || slow) h.classList.add('warn');
-        h.innerHTML = '<span class="num"></span><div class="nm"><b></b><small></small></div><span class="chev" aria-hidden="true"></span>';
+        h.innerHTML = `<button class="grip secgrip" type="button" aria-label="Move this song with all its slides (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><span class="num"></span><div class="nm"><b></b><small></small></div><span class="chev" aria-hidden="true"></span>`;
         const folded = collapsed.has(sec.n);
         h.classList.toggle('collapsed', folded); h.tabIndex = 0; h.setAttribute('role', 'button'); h.setAttribute('aria-expanded', String(!folded));
         h.querySelector('.chev').textContent = folded ? '▸' : '▾';
-        h.querySelector('.num').textContent = sec.n;
+        h.querySelector('.num').textContent = sec.pos;
         h.querySelector('b').textContent = `${sec.title} — ${sec.artist}`;
         h.querySelector('small').textContent = `${fmtDur(sec.start)} → ${fmtDur(sec.start + sec.secs)} · ${n} slide${n === 1 ? '' : 's'}`
           + (!n ? ' · no photos yet' : sec.per ? ` · ${sec.per.toFixed(1)}s each${fast ? ' (very fast)' : slow ? ' (very slow)' : ''}` : ' · custom times');
-        h.onclick = () => toggleSong(sec.n);
-        h.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSong(sec.n); } };
+        h.onclick = e => { if (justDragged || e.target.closest('.secgrip')) return; toggleSong(sec.n); };
+        h.onkeydown = e => { if (e.target.closest('.secgrip')) return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSong(sec.n); } };
         return h;
       };
       if (state.opts.timeline) {
@@ -1380,7 +1436,7 @@
       const tl = timeline();
       tl.secs.forEach(sec => {
         const b = document.createElement('button');
-        b.type = 'button'; b.className = 'tseg' + (sec.files.length ? '' : ' empty'); b.style.setProperty('--sc', sec.color); b.style.flexGrow = sec.secs; b.textContent = sec.n;
+        b.type = 'button'; b.className = 'tseg' + (sec.files.length ? '' : ' empty'); b.style.setProperty('--sc', sec.color); b.style.flexGrow = sec.secs; b.textContent = sec.pos;
         b.title = `${sec.title} — ${sec.artist} · ${fmtDur(sec.secs)} · ${sec.files.length} slides`;
         b.onclick = () => { if (collapsed.has(sec.n)) setSongCollapsed(sec.n, false); if (sec.files.length) show(files.indexOf(sec.files[0]) + 1, { instant: true }); listEl.querySelector(`.sec[data-song="${sec.n}"]`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }); };
         el.append(b);
@@ -1419,29 +1475,88 @@
       show(idx, { instant: true });
     });
     listEl.addEventListener('keydown', e => {
-      const grip = e.target.closest('.grip'); if (!grip || !['ArrowUp', 'ArrowDown'].includes(e.key)) return;
+      const sg = e.target.closest('.secgrip');
+      if (sg && ['ArrowUp', 'ArrowDown'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); return moveSong(Number(sg.closest('.sec').dataset.song), e.key === 'ArrowUp' ? -1 : 1); }
+      const grip = e.target.closest('.grip'); if (!grip || grip.classList.contains('secgrip') || !['ArrowUp', 'ArrowDown'].includes(e.key)) return;
       e.preventDefault(); e.stopPropagation();
       moveAt(Number(grip.closest('.item').dataset.index), e.key === 'ArrowUp' ? -1 : 1);
     });
     let justDragged = false;
-    listEl.addEventListener('pointerdown', e => {
-      const li = e.target.closest('.item[data-file]');
-      if (!li || e.button > 0 || e.target.closest('.del, .rowbtn')) return;
-      if (e.target.closest('.grip')) return startDrag(e, li);       // handle: drag right away
-      const x0 = e.clientX, y0 = e.clientY;                          // anywhere else on the row:
-      const cancel = () => { clearTimeout(hold); window.removeEventListener('pointermove', watch); window.removeEventListener('pointerup', cancel); window.removeEventListener('pointercancel', cancel); };
+    // Start a drag from anywhere on a row or song bar: click-and-drag with a mouse, press-and-hold on a touch screen.
+    function armDrag(e, el, start) {
+      const x0 = e.clientX, y0 = e.clientY;
       let lastMove = null;
+      const cancel = () => { clearTimeout(hold); window.removeEventListener('pointermove', watch); window.removeEventListener('pointerup', cancel); window.removeEventListener('pointercancel', cancel); };
       const watch = ev => {
         lastMove = ev;
         const moved = Math.hypot(ev.clientX - x0, ev.clientY - y0);
-        if (e.pointerType === 'mouse' && moved > 5) { cancel(); startDrag(ev, li); }   // mouse: click-and-drag
-        else if (e.pointerType !== 'mouse' && moved > 8) cancel();                      // touch: they're scrolling the list
+        if (e.pointerType === 'mouse' && moved > 5) { cancel(); start(ev, el); }   // mouse: click-and-drag
+        else if (e.pointerType !== 'mouse' && moved > 8) cancel();                  // touch: they're scrolling the list
       };
-      const hold = e.pointerType === 'mouse' ? 0 : setTimeout(() => { cancel(); navigator.vibrate?.(15); startDrag(lastMove || e, li); }, 350); // touch: press and hold
+      const hold = e.pointerType === 'mouse' ? 0 : setTimeout(() => { cancel(); navigator.vibrate?.(15); start(lastMove || e, el); }, 350);
       window.addEventListener('pointermove', watch);
       window.addEventListener('pointerup', cancel);
       window.addEventListener('pointercancel', cancel);
+    }
+    listEl.addEventListener('pointerdown', e => {
+      if (e.button > 0) return;
+      const bar = e.target.closest('.sec');
+      if (bar) { if (e.target.closest('.secgrip')) return startSongDrag(e, bar); return armDrag(e, bar, startSongDrag); }
+      const li = e.target.closest('.item[data-file]');
+      if (!li || e.target.closest('.del, .rowbtn')) return;
+      if (e.target.closest('.grip')) return startDrag(e, li);   // handle: drag right away
+      armDrag(e, li, startDrag);
     });
+
+    // ---- Reorder whole songs (their slides move with them) ----
+    function applySongOrder(order) {
+      const prev = [...state.songOrder], cf = files[current - 1];
+      const refocus = () => buildSlides(cf ? computeFiles().indexOf(cf) + 1 : 0);
+      state.songOrder = order; save(); refocus(); renderList();
+      toast('Songs reordered. Their slides moved with them.', () => { state.songOrder = prev; save(); refocus(); renderList(); });
+    }
+    function moveSong(id, dir) {
+      const o = [...state.songOrder], i = o.indexOf(id), j = i + dir;
+      if (j < 0 || j >= o.length) return;
+      [o[i], o[j]] = [o[j], o[i]];
+      applySongOrder(o);
+      listEl.querySelector(`.sec[data-song="${id}"] .secgrip`)?.focus();
+    }
+    function startSongDrag(e, bar) {
+      e.preventDefault();
+      const pane = listEl.closest('.pane');
+      const block = [bar]; for (let el = bar.nextElementSibling; el && !el.classList.contains('sec'); el = el.nextElementSibling) block.push(el);
+      listEl.classList.add('sec-drag');                 // fold every song while dragging so only the bars are in the way
+      const rect = bar.getBoundingClientRect();
+      const ghost = bar.cloneNode(true);
+      ghost.classList.add('ghost-sec'); ghost.style.cssText = `width:${rect.width}px;left:${rect.left}px;top:${e.clientY - rect.height / 2}px`;
+      document.body.append(ghost);
+      bar.classList.add('placeholder');
+      const noScroll = ev => ev.preventDefault();
+      window.addEventListener('touchmove', noScroll, { passive: false });
+      let lastY = e.clientY, raf;
+      const move = ev => {
+        lastY = ev.clientY;
+        ghost.style.top = `${ev.clientY - rect.height / 2}px`;
+        const before = [...listEl.querySelectorAll('.sec')].filter(x => x !== bar).find(x => { const r = x.getBoundingClientRect(); return ev.clientY < r.top + r.height / 2; }) || null;
+        if (block.at(-1).nextElementSibling !== before) block.forEach(el => listEl.insertBefore(el, before)); // the bar and its slides travel together
+      };
+      const autoscroll = () => {
+        const r = pane.getBoundingClientRect();
+        if (lastY < r.top + 56) pane.scrollTop -= 12; else if (lastY > r.bottom - 56) pane.scrollTop += 12;
+        raf = requestAnimationFrame(autoscroll);
+      };
+      autoscroll();
+      const done = () => {
+        cancelAnimationFrame(raf);
+        window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', done); window.removeEventListener('pointercancel', done); window.removeEventListener('touchmove', noScroll);
+        justDragged = true; setTimeout(() => { justDragged = false; }, 120);
+        ghost.remove(); bar.classList.remove('placeholder'); listEl.classList.remove('sec-drag');
+        const order = [...listEl.querySelectorAll('.sec')].map(x => Number(x.dataset.song));
+        if (order.join() !== state.songOrder.join()) applySongOrder(order); else renderList();
+      };
+      window.addEventListener('pointermove', move); window.addEventListener('pointerup', done); window.addEventListener('pointercancel', done);
+    }
 
     function startDrag(e, li) {
       e.preventDefault();
@@ -1671,6 +1786,8 @@
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => selectTab(t.dataset.tab)));
     $('modePlay').onclick = () => closePanel(true);
     $('saveBtn').onclick = commit;
+    $('homeBtn').addEventListener('click', goHome); // back to the opening slide (and stop, like Esc)
+    $('suggestBtn').onclick = () => { if (suggested.length) openSuggested(suggested[0].id); else toast('The suggested show is still loading. Try again in a moment.'); };
     $('resetTop').onclick = resetClick;
     $('edit').onclick = () => (isEditing() ? closePanel() : openPanel());
     $('customize').onclick = () => openPanel('slides');
@@ -1698,6 +1815,7 @@
       load(0);
     }).catch(() => { $('begin').textContent = 'Photos could not load — please refresh'; });
     updateSaveUi(); renderVersions();
+    fetch('suggested-shows.json').then(r => r.json()).then(l => { suggested = Array.isArray(l) ? l : []; renderSuggested(); }).catch(() => { /* optional */ });
 
     $('begin').addEventListener('click', () => { show(0); play(); toggleFullscreen(); tip(); }); // starts on the opening slide, which holds for its own time
     $('previous').addEventListener('click', () => show(current - 1));
