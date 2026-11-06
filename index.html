@@ -180,7 +180,7 @@
     .control:hover, .control:focus-visible, .control.on { background:color-mix(in srgb, var(--accent) 18%, transparent); color:var(--accent); outline:none; }
     .control[hidden] { display:none; }
     .progress { position:absolute; left:0; bottom:0; height:3px; width:0; background:linear-gradient(90deg,transparent,var(--accent)); transition:width .45s ease; }
-    .swipe-tip { position:fixed; z-index:11; left:50%; bottom:calc(var(--safe-b) + 92px); transform:translateX(-50%); padding:8px 16px; border-radius:999px; background:rgba(10,15,12,.85); color:#b9c6b2; font:600 .72rem Arial,sans-serif; letter-spacing:.1em; text-transform:uppercase; opacity:0; pointer-events:none; transition:opacity .6s; white-space:nowrap; }
+    .swipe-tip { position:fixed; z-index:11; left:50%; bottom:calc(var(--safe-b) + 112px); transform:translateX(-50%); width:max-content; max-width:calc(100vw - 32px); padding:14px 22px; border:1px solid color-mix(in srgb, var(--accent) 70%, transparent); border-radius:18px; background:rgba(8,10,14,.9); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); color:#fff; font:700 1.1rem/1.3 Arial,sans-serif; letter-spacing:.01em; text-align:center; opacity:0; pointer-events:none; transition:opacity .6s; }
     .swipe-tip.show { opacity:1; }
     .toast { position:fixed; z-index:40; left:50%; top:calc(var(--safe-t) + 16px); transform:translate(-50%,-140%); display:flex; align-items:center; gap:14px; padding:10px 12px 10px 18px; border-radius:999px; background:#1b241f; color:#f5f1e8; border:1px solid rgba(255,255,255,.14); box-shadow:0 10px 30px rgba(0,0,0,.4); font:600 .85rem Arial,sans-serif; transition:transform .35s ease; max-width:92vw; }
     .toast.show { transform:translate(-50%,0); }
@@ -416,7 +416,7 @@
       h1 { font-size:2.6rem; }
       .rule { margin:16px 0; background:linear-gradient(90deg,var(--accent),transparent); }
       .begin { margin-top:16px; width:auto; }
-      .swipe-tip { display:none; }
+      .swipe-tip { bottom:64px; padding:10px 18px; font-size:1rem; }
       body.editing .stage, body.editing .chrome { right:var(--panel-w); bottom:0; }
       .panel { top:0; left:auto; width:var(--panel-w); height:auto; border-radius:0; border-top:0; border-left:1px solid rgba(255,255,255,.14); transform:translateX(102%); }
     }
@@ -441,6 +441,19 @@
     .navbtn:focus-visible { outline:2px solid #fff; outline-offset:2px; }
     .navbtn:disabled { opacity:.28; cursor:default; box-shadow:none; }
     body.editing:not(.fs) #counter { padding:8px 16px; border:1px solid color-mix(in srgb, var(--accent, #d8ba7a) 65%, transparent); border-radius:999px; background:color-mix(in srgb, var(--bg) 72%, transparent); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); color:var(--accent, #d8ba7a); font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+    /* collapse handle: an arrow tab on the panel's edge (points right on a computer: the menu slides off to the right) */
+    .collapse-btn { position:absolute; z-index:2; left:-36px; top:50%; transform:translateY(-50%); width:36px; height:84px; display:grid; place-items:center; padding:0; border:1px solid var(--accent, #d8ba7a); border-right:0; border-radius:14px 0 0 14px; background:var(--accent, #d8ba7a); color:#0b1018; cursor:pointer; box-shadow:-6px 0 20px rgba(0,0,0,.4); }
+    .collapse-btn svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2.8; stroke-linecap:round; stroke-linejoin:round; }
+    body:not(.editing) .collapse-btn { visibility:hidden; pointer-events:none; } /* only on an open menu; the Edit button brings the menu back */
+    .collapse-btn:hover { filter:brightness(1.1); } .collapse-btn:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+    @media (max-width:760px) { /* on a phone the menu is a sheet at the bottom: the arrow points down */
+      .collapse-btn { left:50%; top:-36px; transform:translateX(-50%); width:96px; height:36px; border:1px solid var(--accent, #d8ba7a); border-bottom:0; border-radius:14px 14px 0 0; box-shadow:0 -6px 20px rgba(0,0,0,.4); }
+      .collapse-btn svg { transform:rotate(90deg); }
+    }
+    @media (max-height:520px) and (orientation:landscape) { /* a phone on its side has the menu at the right again */
+      .collapse-btn { left:-36px; top:50%; transform:translateY(-50%); width:36px; height:84px; border:1px solid var(--accent, #d8ba7a); border-right:0; border-radius:14px 0 0 14px; box-shadow:-6px 0 20px rgba(0,0,0,.4); }
+      .collapse-btn svg { transform:none; }
+    }
     /* tabs as real menu buttons */
     .tabs { flex-wrap:wrap; overflow:visible; gap:5px; padding:10px 10px 12px; border-bottom:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.22); }
     .tab { flex:1 1 auto; min-width:0; padding:10px 10px; text-align:center; white-space:nowrap; border:1px solid rgba(255,255,255,.16); border-radius:11px; background:linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.04)); color:#e6ebf2; font:700 .68rem Arial,sans-serif; letter-spacing:.05em; box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 1px 3px rgba(0,0,0,.35); transition:background .15s, border-color .15s, color .15s, transform .1s; }
@@ -499,7 +512,7 @@
       </dl>
     </div>
   </div>
-  <div class="swipe-tip" id="swipeTip">Swipe to move through photos</div>
+  <div class="swipe-tip" id="swipeTip" role="status">← Swipe left or right to change slides →</div>
   <div class="endcard" id="endCard"><button id="endRestart" type="button"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg> Restart slideshow</button></div>
   <div class="nowplaying" id="nowPlaying" aria-live="polite" hidden>
     <div class="np-bar"><i id="npFill"></i></div>
@@ -509,6 +522,7 @@
   <div class="toast" id="toast" role="status"><span id="toastMsg"></span><button id="toastUndo" type="button">Undo</button></div>
 
   <aside class="panel" id="panel" aria-label="Edit slideshow">
+    <button class="collapse-btn" id="collapsePanel" type="button" aria-label="Collapse menu" title="Collapse menu"><svg viewBox="0 0 24 24"><path d="M8.5 4.5 16 12l-7.5 7.5" /></svg></button>
     <div class="panel-head">
       <div class="mode" role="group" aria-label="Mode">
         <button class="seg" id="modePlay" type="button">▶ Play</button>
@@ -1297,6 +1311,7 @@
     }
     function play() {
       playing = true; updateBegin(); updatePlayUi(); slideStart = performance.now(); updateNowPlaying();
+      if (!tipShown) tip();
       playPause.innerHTML = ICON_PAUSE; playPause.setAttribute('aria-label', 'Pause slideshow');
       keepAwake(); schedule();
     }
@@ -2142,6 +2157,7 @@
     ['scroll', 'wheel', 'pointerdown', 'keydown'].forEach(t => document.addEventListener(t, hideZoom, true));
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => selectTab(t.dataset.tab)));
     $('modePlay').onclick = () => togglePlay();          // plays (or pauses) right here, with the Edit panel still open
+    $('collapsePanel').onclick = () => closePanel();     // the arrow on the menu's edge folds it away
     $('modeEdit').onclick = () => closePanel();           // the lit Edit segment closes the panel; playback carries on
     $('saveBtn').onclick = commit;
     // Keyboard shortcuts card (the ? button, or the ? key)
@@ -2256,7 +2272,7 @@
       const fast = Math.abs(dx) / dt > 0.3 && Math.abs(dx) > 24;      // a flick
       if (swiping && (Math.abs(dx) > 56 || fast)) {
         const to = Math.max(0, Math.min(slides.length - 1, current + (dx < 0 ? 1 : -1)));
-        if (to !== current) { show(to, { fx: 'slide' }); navFeedback(); }
+        if (to !== current) { show(to, { fx: 'slide' }); navFeedback(); $('swipeTip').classList.remove('show'); }
       } else if (!swiping && Math.abs(dx) < 10 && Math.abs(dy) < 10 && dt < 400 && current > 0 && !isEditing()) {
         if (document.body.classList.contains('controls-visible')) { clearTimeout(controlsTimer); document.body.classList.remove('controls-visible'); }
         else wake(4500);
@@ -2265,11 +2281,15 @@
     document.addEventListener('touchcancel', () => { touch = null; }, { passive: true });
     document.querySelector('.chrome').addEventListener('pointerdown', () => wake(4500));
 
-    function tip() {
-      if (!matchMedia('(hover:none)').matches) return;
+    document.documentElement.classList.toggle('is-mobile', matchMedia('(hover:none)').matches || matchMedia('(pointer:coarse)').matches || innerWidth <= 760);
+    const isMobile = () => matchMedia('(hover:none)').matches || matchMedia('(pointer:coarse)').matches || innerWidth <= 760; // a phone or tablet, or a narrow window
+    let tipTimer, tipShown = false;
+    function tip() { // the swipe hint: only on a touch device, big enough to read, and gone after a few seconds
+      if (!isMobile()) return;
+      tipShown = true;
       const el = $('swipeTip');
-      el.classList.add('show');
-      setTimeout(() => el.classList.remove('show'), 4200);
+      el.classList.add('show'); clearTimeout(tipTimer);
+      tipTimer = setTimeout(() => el.classList.remove('show'), 6000);
     }
     wake(6000);
 
