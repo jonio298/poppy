@@ -1005,6 +1005,8 @@
     }
     const edit = f => state.slides[f] || (state.slides[f] = {});
     const dateOf = f => { const e = state.slides[f]; return e && e.date !== undefined ? e.date : (byFile[f].date || ''); };
+    // What the slide itself shows: the date plus a few words on who/where, unless the date was edited by hand (then just that).
+    const labelOf = f => (state.slides[f]?.date !== undefined ? dateOf(f) : [dateOf(f), byFile[f].short].filter(Boolean).join(' · '));
     const captionOf = f => (state.slides[f]?.caption || '').trim();
     // Older photos get the Polaroid look; newer ones rotate through different borders.
     const NEW_STYLES = ['border', 'rounded', 'framed', 'matte'];
@@ -1059,7 +1061,7 @@
     }
     function renderSlide(file, index) {
       const section = document.createElement('section');
-      const style = styleOf(file, index), caption = captionOf(file), date = dateOf(file);
+      const style = styleOf(file, index), caption = captionOf(file), date = labelOf(file);
       section.className = `slide st-${style}${caption ? ' has-caption' : ''}`;
       section.dataset.file = file;
       applyFilterVars(section, file);
