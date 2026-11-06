@@ -222,6 +222,7 @@
     .btn.primary.dirty { box-shadow:0 0 0 3px rgba(216,186,122,.38); }
     .savestate { padding:0 18px 8px; font-size:.72rem; color:#8fa08f; }
     .savestate.dirty { color:#e8c070; }
+    .jonrow { display:flex; align-items:center; gap:10px; padding:0 18px 10px; } .jonrow[hidden] { display:none; } .jonrow small { color:#8fa08f; font-size:.7rem; line-height:1.3; }
     .panel-head { gap:10px; }
     .mode { display:inline-flex; padding:3px; border-radius:999px; background:#0d130f; border:1px solid rgba(255,255,255,.14); }
     .seg { padding:9px 16px; border:0; border-radius:999px; background:transparent; color:#9bab9b; font:700 .74rem Arial,sans-serif; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; }
@@ -459,6 +460,7 @@
       </div>
     </div>
     <div class="savestate" id="saveState" aria-live="polite"></div>
+    <div class="jonrow" id="jonRow" hidden><button class="reload-toggle on" id="jonSwitch" type="button" role="switch" aria-checked="true"><span>Jon’s Version</span><span class="rt-track"><i></i></span></button><small>On: the slides Jon arranged and captioned. Off: the plain original.</small></div>
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="slides" aria-selected="true">Slides</button>
       <button class="tab" role="tab" data-tab="slide" aria-selected="false">Slide</button>
@@ -648,6 +650,7 @@
     const stage = $('stage'), counter = $('counter'), progress = $('progress'), playPause = $('playPause'), fullscreenBtn = $('fullscreen');
 
     // ---------- Saved edits ----------
+    let jonsOn = false; // is the show on screen Jon's Version (as opposed to the plain original, or a version saved on this device)?
     let BASE = null; // jons-choice.json once it has loaded: the show everyone starts from
     const defaults = () => (BASE ? JSON.parse(JSON.stringify(BASE)) : builtinDefaults());
     const builtinDefaults = () => ({
@@ -705,7 +708,12 @@
     function markSaved() { savedJson = JSON.stringify(state); savedSnapshot = canon(state); }
     const isDirty = () => canon(state) !== savedSnapshot;
     function save() { tlCache = null; updateSaveUi(); if (typeof updateNowPlaying === 'function' && files.length) updateNowPlaying(); } // called after every edit: flags it as changed
+    function syncJonSwitch() {
+      const row = $('jonRow'), sw = $('jonSwitch'); if (!row || !sw) return;
+      row.hidden = !BASE; sw.classList.toggle('on', jonsOn); sw.setAttribute('aria-checked', String(jonsOn));
+    }
     function updateSaveUi() {
+      syncJonSwitch();
       const dirty = isDirty(), cv = currentVersion();
       $('saveBtn').classList.toggle('dirty', dirty);
       $('saveState').classList.toggle('dirty', dirty);
@@ -803,7 +811,7 @@
       const v = versions.find(x => x.id === id);
       if (id && !v) return;
       if (isDirty() && !confirm('You have unsaved changes. Open this version anyway? Your unsaved changes will be lost.')) return;
-      state = v ? normalize(JSON.parse(v.state)) : defaults();
+      state = v ? normalize(JSON.parse(v.state)) : defaults(); jonsOn = !v;
       currentId = id; reloadId = id; markSaved(); await persistAll(); // opening one also makes it the one that opens on reload; the switch can turn that off
       await applyState(0); renderVersions();
       toast(v ? `Opened “${v.name}”. It will open this way on reload.` : 'Opened the original slideshow. It will open this way on reload.');
@@ -928,7 +936,7 @@
         state = normalize(JSON.parse(savedJson)); applyState(current); toast('Back to your last saved version');
       } else {
         if (!confirm('Go back to the original slideshow? Your saved versions stay in the Versions tab.')) return;
-        state = defaults(); applyState(0); toast('Back to the original. Press Save to keep it as a version.');
+        state = defaults(); jonsOn = true; applyState(0); toast('Back to the original. Press Save to keep it as a version.');
       }
     }
     window.addEventListener('beforeunload', e => { if (isDirty()) { e.preventDefault(); e.returnValue = ''; } });
@@ -1520,7 +1528,7 @@
         li.className = 'item'; li.dataset.file = f; li.dataset.index = i + 1;
         if (state.opts.timeline) { li.style.setProperty('--sc', SONGS[songOf(f) - 1].color); li.dataset.song = songOf(f); if (collapsed.has(songOf(f))) li.classList.add('folded'); }
         li.innerHTML = `<button class="grip" type="button" aria-label="Move slide ${i + 1} (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><img loading="lazy" decoding="async" alt="" draggable="false" src="${thumbOf(f)}"><div class="info"><b><i>${i + 1}</i></b><small></small></div><div class="rowacts"><button class="rowbtn send" type="button" aria-label="Send slide ${i + 1} to a song" title="Send to a song">${ICON_NOTE}</button><button class="rowbtn" type="button" aria-label="Edit slide ${i + 1}">${ICON_PEN}</button><button class="del" type="button" aria-label="Delete slide ${i + 1}">${ICON_X}</button></div>`;
-        { const t = [dateOf(f), byFile[f].short].filter(Boolean).join(' · ') || (captionOf(f) || byFile[f].caption ? '' : 'No date'); if (t) li.querySelector('b').append(document.createTextNode(' · ' + t)); }
+        { const t = labelOf(f) || (captionOf(f) || byFile[f].caption ? '' : 'No date'); if (t) li.querySelector('b').append(document.createTextNode(' · ' + t)); }
         li.querySelector('small').textContent = (isOwn(f) ? 'Your photo · ' : '') + (captionOf(f) || byFile[f].caption || '').replace(/\s+/g, ' ').trim();
         return li;
       };
@@ -1977,12 +1985,19 @@
           await blobPut(id, { full: await (await fetch(im.full)).blob(), thumb: await (await fetch(im.thumb)).blob() });
         }
         delete data.images;
-        state = normalize(data); await applyState(0); toast('Loaded. Press Save to keep it as a version.');
+        state = normalize(data); jonsOn = false; await applyState(0); toast('Loaded. Press Save to keep it as a version.');
       } catch (_) { toast('That file isn’t a saved slideshow'); }
+    });
+    $('jonSwitch').addEventListener('click', async () => { // Jon's Version on = his arrangement and captions; off = the plain original
+      const turnOn = !jonsOn;
+      if (isDirty() && !confirm(`You have unsaved changes. Switch ${turnOn ? 'on' : 'off'} Jon’s Version anyway? Your unsaved changes will be lost.`)) return;
+      state = turnOn ? defaults() : builtinDefaults(); jonsOn = turnOn; currentId = ''; reloadId = '';
+      markSaved(); await persistAll(); await applyState(0); renderVersions(); updateSaveUi();
+      toast(turnOn ? 'Jon’s Version is on.' : 'Showing the plain original (no captions or reordering).');
     });
     $('resetBtn').onclick = () => {
       if (!confirm('Go back to the original slideshow? Your saved versions stay in the Versions tab.')) return;
-      state = defaults(); applyState(0); toast('Back to the original. Press Save to keep it as a version.');
+      state = defaults(); jonsOn = true; applyState(0); toast('Back to the original. Press Save to keep it as a version.');
     };
     $('addPhotos').onclick = () => $('photoFile').click();
     $('photoFile').addEventListener('change', e => { const f = e.target.files; if (f && f.length) addPhotos(f); e.target.value = ''; });
@@ -2062,7 +2077,8 @@
     fetch('jons-choice.json').then(r => (r.ok ? r.json() : null)).catch(() => null).then(async data => { // Jon's arrangement is the default show
       if (data && data.v === 1) {
         BASE = normalize(data);
-        if (!currentVersion() && !isDirty()) { state = defaults(); markSaved(); applyTheme(); applyCover(); applyOpts(); buildThemeUi(); setLoopUi(); }
+        if (!currentVersion() && !isDirty()) { state = defaults(); jonsOn = true; markSaved(); applyTheme(); applyCover(); applyOpts(); buildThemeUi(); setLoopUi(); }
+        syncJonSwitch();
       }
       return fetch('photos.json').then(r => r.json());
     }).then(async list => {
