@@ -12,10 +12,11 @@ A full-screen photo slideshow created in loving memory of Charles “Charlie” 
 - **Auto-scroll:** the loop button (or the checkbox on the Show tab) keeps the show playing continuously, starting over after the last photo.
 
 **Edit mode** opens a side menu (a bottom sheet on phones). Switch back with **▶ Play** at the top of the menu.
-- **Slides:** the full list of photos with thumbnails. Drag any slide up or down to reorder (press and hold on a phone, or focus the **⠿** handle and use the up/down arrow keys), tap a slide to preview it, **✎** to edit it, or the red **✕** to delete it (with Undo, and a Restore list for deleted slides).
-- **Slide:** for the selected photo, change its date, add a caption, resize it, pick a photo style (thin white border, plain, polaroid, gold frame, film strip), pick its transition and preview it, set how many seconds it stays and its Ken Burns motion, apply its transition or style to all slides, move it earlier/later, reset it, or delete it.
+- **Slides:** **＋ Add my own photos** (or drag picture files onto the page) adds pictures from your device. They are shrunk to a sensible size and kept in this browser, then behave like any other slide. Below that, the full list of photos with thumbnails. Drag any slide up or down to reorder (press and hold on a phone, or focus the **⠿** handle and use the up/down arrow keys), tap a slide to preview it, **✎** to edit it, or the red **✕** to delete it (with Undo, and a Restore list for deleted slides).
+- **Slide:** for the selected photo, change its date, add a caption, resize it, pick a photo style (thin white border, plain, polaroid, gold frame, film strip), pick a filter (black & white, sepia, vintage, warm, cool, vivid, faded, noir, soft glow) and its strength, pick its transition and preview it, set how many seconds it stays and its Ken Burns motion, apply its transition or style to all slides, move it earlier/later, reset it, or delete it.
 - **Show:** the opening text, default transition and photo style, seconds per photo, Ken Burns motion, photo size, and the vintage film look.
 - **Theme:** colour presets (or any background/accent colour) and font.
+- **Versions:** every **Save** keeps a dated, timed version here. **Open** one to edit it (it then opens on reload), **Rename**, **Download** it (with your own photos inside) or **Delete** it. The original slideshow is always listed too.
 
 ## Look
 
@@ -23,6 +24,6 @@ By default the transitions are shuffled randomly (never the same one twice in a 
 
 ## Saving
 
-Press **Save** at the top of the Edit menu to keep your version. It is stored in that person's own browser (with a second backup copy), and the slideshow opens exactly like that every time, even after a reload. Unsaved changes are not kept on reload. **Reset** throws away unsaved changes and goes back to the last saved version (or, if nothing is unsaved, back to the original, which is only kept if you press Save). Ctrl+S also saves. Each person sees their own version, and the original is never changed. Use **Download my version** (Slides tab) to back one up or move it to another device.
+Press **Save** at the top of the Edit menu to keep a version. Versions, and any pictures added, are stored in that person's own browser (localStorage plus a second IndexedDB copy; a small cookie lists the saved versions so the page can tell if browser data was cleared), and the slideshow opens as the most recently saved or opened version every time, even after a reload. Unsaved changes are not kept on reload. **Reset** throws away unsaved changes and goes back to the last saved version (or, if nothing is unsaved, back to the original, which is only kept if you press Save). Ctrl+S also saves. Each person sees their own version, and the original is never changed. Use **Download my version** (Slides tab) to back one up or move it to another device.
 
 `photos/thumbs/` holds small previews used by the slide list.
