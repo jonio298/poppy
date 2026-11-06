@@ -172,6 +172,14 @@
     .thumb b { position:absolute; left:4px; top:4px; padding:2px 5px; border-radius:6px; background:rgba(0,0,0,.65); color:#fff; font:700 .65rem Arial,sans-serif; }
     .thumb.gone img { opacity:.45; }
     .hr { height:1px; margin:18px 0; background:rgba(255,255,255,.1); }
+    .saveacts { display:flex; gap:8px; }
+    .btn.small { padding:10px 14px; }
+    .btn.primary { background:#d8ba7a; border-color:#d8ba7a; color:#141c17; }
+    .btn.primary:hover { filter:brightness(1.08); color:#141c17; }
+    .btn.primary.dirty { box-shadow:0 0 0 3px rgba(216,186,122,.38); }
+    .savestate { padding:0 18px 8px; font-size:.72rem; color:#8fa08f; }
+    .savestate.dirty { color:#e8c070; }
+    .panel-head { gap:10px; }
     .mode { display:inline-flex; padding:3px; border-radius:999px; background:#0d130f; border:1px solid rgba(255,255,255,.14); }
     .seg { padding:9px 16px; border:0; border-radius:999px; background:transparent; color:#9bab9b; font:700 .74rem Arial,sans-serif; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; }
     .seg:hover { color:#d8ba7a; } .seg.on, .seg.on:hover { background:#d8ba7a; color:#141c17; }
@@ -265,7 +273,7 @@
 
   <div class="chrome" aria-label="Slideshow controls">
     <div class="topline"><span id="topTitle">In Loving Memory · Charles Ross</span><span id="counter">Opening</span></div>
-    <div class="hint">Arrow keys to navigate · Space to pause · R to restart · F for full screen · E to edit · Esc to pause</div>
+    <div class="hint">Arrow keys to navigate · Space to pause · R to restart · F for full screen · E to edit · Esc for the main page</div>
     <div class="controls">
       <button class="control" id="previous" aria-label="Previous photo"><svg viewBox="0 0 24 24"><path d="M15.4 5.4 14 4 6 12l8 8 1.4-1.4L8.8 12z"/></svg></button>
       <button class="control" id="playPause" aria-label="Play slideshow"></button>
@@ -287,8 +295,12 @@
         <button class="seg" id="modePlay" type="button">▶ Play</button>
         <button class="seg on" id="modeEdit" type="button" aria-pressed="true">✎ Edit</button>
       </div>
-      <span class="saved" id="saved"></span>
+      <div class="saveacts">
+        <button class="btn small" id="resetTop" type="button" title="Discard unsaved changes">Reset</button>
+        <button class="btn small primary" id="saveBtn" type="button" title="Save this version on this device (Ctrl+S)">Save</button>
+      </div>
     </div>
+    <div class="savestate" id="saveState" aria-live="polite"></div>
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="slides" aria-selected="true">Slides</button>
       <button class="tab" role="tab" data-tab="slide" aria-selected="false">Slide</button>
@@ -306,7 +318,7 @@
       </div>
       <div class="hr"></div>
       <span class="label">Save &amp; share</span>
-      <p class="note">Edits save automatically on this device. Save a copy to keep a backup or move your version to another device.</p>
+      <p class="note">Press <b>Save</b> at the top to keep your version on this device; it will open exactly like that next time. Download a copy to back it up or move it to another device.</p>
       <div class="stack">
         <button class="btn" id="exportBtn" type="button">Download my version</button>
         <button class="btn" id="importBtn" type="button">Load a saved version</button>
@@ -413,10 +425,11 @@
     });
     let state = defaults();
     let storageOk = true;
+    let loadedFromLS = false;
     function loadState() {
       try {
         const raw = localStorage.getItem(STORE_KEY);
-        if (raw) state = normalize(JSON.parse(raw));
+        if (raw) { state = normalize(JSON.parse(raw)); loadedFromLS = true; }
       } catch (_) { storageOk = false; }
     }
     function normalize(s) {
@@ -431,14 +444,59 @@
         deleted: Array.isArray(s.deleted) ? s.deleted : [],
       };
     }
-    let savedTimer;
-    function save() {
-      let ok = true;
-      try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (_) { ok = false; storageOk = false; }
-      $('saved').textContent = ok ? 'Saved ✓' : 'Not saved on this browser — use Download';
-      clearTimeout(savedTimer);
-      if (ok) savedTimer = setTimeout(() => { $('saved').textContent = ''; }, 2200);
+    // `state` is the working copy. Nothing is stored until Save is pressed; reloading always opens the last saved version.
+    const canon = x => JSON.stringify(x, (k, v) => (v && typeof v === 'object' && !Array.isArray(v))
+      ? Object.fromEntries(Object.entries(v).filter(([, e]) => !(k === 'slides' && e && typeof e === 'object' && !Array.isArray(e) && !Object.keys(e).length)).sort(([m], [n]) => (m < n ? -1 : 1)))
+      : v);
+    let savedJson = '', savedSnapshot = '';
+    function markSaved() { savedJson = JSON.stringify(state); savedSnapshot = canon(state); }
+    const isDirty = () => canon(state) !== savedSnapshot;
+    function save() { updateSaveUi(); } // called after every edit: flags it as changed
+    function updateSaveUi() {
+      const dirty = isDirty();
+      $('saveBtn').classList.toggle('dirty', dirty);
+      $('saveState').classList.toggle('dirty', dirty);
+      $('saveState').textContent = !storageOk ? 'This browser is blocking saving. Use “Download my version” to keep your changes.'
+        : dirty ? 'Unsaved changes. Press Save to keep them.' : 'All changes saved.';
     }
+    // A second copy in IndexedDB, in case the browser clears or blocks localStorage.
+    function idb() { return new Promise((res, rej) => { try { const r = indexedDB.open('poppy-slideshow', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }); }
+    async function idbPut(v) { try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, STORE_KEY); t.oncomplete = res; t.onerror = () => rej(t.error); }); return true; } catch (_) { return false; } }
+    async function idbGet() { try { const db = await idb(); return await new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(STORE_KEY); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); } catch (_) { return null; } }
+    async function commit() {
+      const json = JSON.stringify(state);
+      let ok = true;
+      try { localStorage.setItem(STORE_KEY, json); } catch (_) { ok = false; }
+      const backedUp = await idbPut(json);
+      try { await navigator.storage?.persist?.(); } catch (_) { /* optional: asks the browser not to clear it */ }
+      if (ok || backedUp) {
+        storageOk = true; markSaved(); updateSaveUi();
+        toast(ok ? 'Saved. It will open exactly like this next time on this device.' : 'Saved to this browser’s backup storage.');
+      } else { storageOk = false; updateSaveUi(); toast('This browser won’t let me save. Use “Download my version” instead.'); }
+    }
+    function setLoopUi() {
+      $('loopBtn').classList.toggle('on', !!state.opts.loop);
+      $('loopBtn').setAttribute('aria-pressed', String(!!state.opts.loop));
+      $('oLoop').checked = !!state.opts.loop;
+    }
+    function applyState(focus = 0) { // re-draw everything after the working copy was swapped
+      applyTheme(); applyCover(); applyOpts(); buildThemeUi(); setLoopUi();
+      if (photos.length) buildSlides(focus);
+      syncShow();
+      if (isEditing()) { renderList(); syncSlide(); }
+      updateSaveUi();
+    }
+    function resetClick() {
+      if (isDirty()) {
+        if (!confirm('Throw away your unsaved changes and go back to the last saved version?')) return;
+        state = normalize(JSON.parse(savedJson)); applyState(current); toast('Back to your last saved version');
+      } else {
+        if (!confirm('Go back to the original slideshow? Your saved version stays until you press Save.')) return;
+        state = defaults(); applyState(0); toast('Back to the original. Press Save to keep it.');
+      }
+    }
+    window.addEventListener('beforeunload', e => { if (isDirty()) { e.preventDefault(); e.returnValue = ''; } });
+    document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); commit(); } });
 
     // ---------- Slides ----------
     let photos = [];          // from photos.json
@@ -606,17 +664,17 @@
       const last = current >= slides.length - 1;
       timer = setTimeout(() => { if (!last) show(current + 1); else if (state.opts.loop) show(1); else endShow(); }, slideMs(current));
     }
+    function goHome() { // Esc outside full screen: stop and return to the opening page, where Edit mode is
+      pause(); $('endCard').classList.remove('show');
+      if (current !== 0) show(0);
+    }
     function endShow() { pause(); $('endCard').classList.add('show'); }
     function restart() {
       if (slides.length < 2) return;
       $('endCard').classList.remove('show');
       show(1); play(); wake(3000);
     }
-    function setLoop(on) {
-      state.opts.loop = on; save();
-      $('loopBtn').classList.toggle('on', on); $('loopBtn').setAttribute('aria-pressed', String(on));
-      $('oLoop').checked = on;
-    }
+    function setLoop(on) { state.opts.loop = on; setLoopUi(); save(); }
     async function keepAwake() { try { wakeLock = await navigator.wakeLock?.request('screen'); } catch (_) { /* optional */ } }
     function play() {
       playing = true;
@@ -984,22 +1042,27 @@
       try {
         const data = JSON.parse(await file.text());
         if (!data || typeof data !== 'object' || data.v !== 1) throw new Error('bad');
-        state = normalize(data); save(); applyTheme(); applyCover(); applyOpts(); buildThemeUi(); buildSlides(0); syncShow(); renderList(); toast('Loaded your saved version');
+        state = normalize(data); save(); applyTheme(); applyCover(); applyOpts(); buildThemeUi(); buildSlides(0); syncShow(); renderList(); toast('Loaded. Press Save to keep it.');
       } catch (_) { toast('That file isn’t a saved slideshow'); }
     });
     $('resetBtn').onclick = () => {
-      if (!confirm('Reset all edits and go back to the original slideshow?')) return;
-      state = defaults(); save(); applyTheme(); applyCover(); applyOpts(); buildThemeUi(); buildSlides(0); syncShow(); renderList(); toast('Back to the original');
+      if (!confirm('Go back to the original slideshow? Press Save afterwards if you want to keep that.')) return;
+      state = defaults(); save(); applyTheme(); applyCover(); applyOpts(); buildThemeUi(); buildSlides(0); syncShow(); renderList(); toast('Back to the original. Press Save to keep it.');
     };
 
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => selectTab(t.dataset.tab)));
     $('modePlay').onclick = () => closePanel(true);
+    $('saveBtn').onclick = commit;
+    $('resetTop').onclick = resetClick;
     $('edit').onclick = () => (isEditing() ? closePanel() : openPanel());
     $('customize').onclick = () => openPanel('slides');
 
     // ---------- Start ----------
-    loadState();
-    $('loopBtn').classList.toggle('on', !!state.opts.loop); $('loopBtn').setAttribute('aria-pressed', String(!!state.opts.loop));
+    loadState(); markSaved(); setLoopUi();
+    if (!loadedFromLS) idbGet().then(json => { // localStorage was empty (cleared or blocked): try the backup copy
+      if (!json || isDirty()) return;
+      try { state = normalize(JSON.parse(json)); markSaved(); applyState(0); } catch (_) { /* ignore a bad backup */ }
+    });
     applyTheme(); applyCover(); applyOpts(); buildThemeUi();
     fetch('photos.json').then(r => r.json()).then(list => {
       photos = list; byFile = Object.fromEntries(list.map(p => [p.file, p]));
@@ -1008,7 +1071,7 @@
       begin.disabled = false; begin.textContent = 'Begin slideshow';
       load(0);
     }).catch(() => { $('begin').textContent = 'Photos could not load — please refresh'; });
-    if (!storageOk) $('saved').textContent = 'Not saved on this browser — use Download';
+    updateSaveUi();
 
     $('begin').addEventListener('click', () => { show(1); play(); toggleFullscreen(); tip(); wake(4000); });
     $('previous').addEventListener('click', () => show(current - 1));
@@ -1027,7 +1090,7 @@
       else if (event.key === ' ') { event.preventDefault(); togglePlay(); }
       else if (event.key.toLowerCase() === 'f') toggleFullscreen();
       else if (event.key.toLowerCase() === 'e') (isEditing() ? closePanel() : openPanel());
-      else if (event.key === 'Escape') { if (isEditing()) closePanel(); else if (playing) { pause(); toast('Paused — press ▶ to keep going'); } }
+      else if (event.key === 'Escape') { if (isEditing()) closePanel(); else if (!document.fullscreenElement) goHome(); }
       else if (event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.metaKey) restart();
       else if (event.key === 'Home') show(0);
       else if (event.key === 'End') show(slides.length - 1);

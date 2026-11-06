@@ -7,7 +7,7 @@ A full-screen photo slideshow created in loving memory of Charles “Charlie” 
 **Play mode** is the clean slideshow.
 - Tap or click **Begin slideshow** to start. The photos are timed evenly across the 22:24 playlist by default.
 - **Phones:** swipe left/right to change photos, tap to show or hide the controls.
-- **Keyboard:** arrow keys to move, space to pause, **R** to restart, **F** for full screen, **E** to switch to Edit mode, **Esc** to leave full screen and pause.
+- **Keyboard:** arrow keys to move, space to pause, **R** to restart, **F** for full screen, **E** to switch to Edit mode, **Esc** to leave full screen and pause; press **Esc** again (outside full screen) to go back to the opening page, where Edit mode is.
 - **Restart:** the ↻ button (or **R**) starts over from the first photo. When the show ends, a **Restart slideshow** button appears.
 - **Auto-scroll:** the loop button (or the checkbox on the Show tab) keeps the show playing continuously, starting over after the last photo.
 
@@ -23,6 +23,6 @@ By default the transitions are shuffled randomly (never the same one twice in a 
 
 ## Saving
 
-Edits save automatically in the viewer's own browser, so each person sees their own version and the original is never changed. Use **Download my version** (Slides tab) to back one up or move it to another device.
+Press **Save** at the top of the Edit menu to keep your version. It is stored in that person's own browser (with a second backup copy), and the slideshow opens exactly like that every time, even after a reload. Unsaved changes are not kept on reload. **Reset** throws away unsaved changes and goes back to the last saved version (or, if nothing is unsaved, back to the original, which is only kept if you press Save). Ctrl+S also saves. Each person sees their own version, and the original is never changed. Use **Download my version** (Slides tab) to back one up or move it to another device.
 
 `photos/thumbs/` holds small previews used by the slide list.
