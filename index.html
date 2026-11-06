@@ -66,7 +66,7 @@
     .slide.active .fig.kb, .slide.leaving .fig.kb { animation:kb var(--kb-dur,16s) linear both; } /* .leaving too: the old slide keeps its zoom while the next one fades in over it */
     @keyframes kb { from { transform:translate(var(--x0,0),var(--y0,0)) scale(var(--s0,1)); } to { transform:translate(var(--x1,0),var(--y1,0)) scale(var(--s1,1)); } }
     /* Every photo sits in a .snap frame; its size is capped so small scans are never blown up past --up x their real size */
-    .snap { position:relative; --bw:0px; --fw:calc(2 * var(--bw)); --fh:calc(2 * var(--bw)); --maxw:calc(var(--sw) - var(--padx)); --maxh:calc(var(--sh) - var(--reserve)); padding:var(--bw); transform:rotate(var(--tilt,0deg)); }
+    .snap { position:relative; --bw:0px; --fw:calc(2 * var(--bw)); --fh:calc(2 * var(--bw) + var(--capbar, 0px)); --maxw:calc(var(--sw) - var(--padx)); --maxh:calc(var(--sh) - var(--reserve)); padding:var(--bw); transform:rotate(var(--tilt,0deg)); }
     .snap img { display:block; height:auto; width:calc(min(calc(var(--maxw) - var(--fw)), calc((var(--maxh) - var(--fh)) * var(--r,1.5)), calc(var(--nw,4000) * 1px * var(--up,2))) * var(--pscale,1)); opacity:1; transition:opacity .6s ease; }
     .snap img:not(.ready) { opacity:0; }
     .st-plain .snap { filter:drop-shadow(0 20px 50px rgba(0,0,0,.5)); }
@@ -77,9 +77,12 @@
     .st-matte .snap img { box-shadow:0 0 0 1px rgba(80,62,34,.4); }
     .st-polaroid .snap { --bw:14px; --fh:76px; padding:14px 14px 62px; background:#f8f4ea; box-shadow:0 22px 50px rgba(0,0,0,.5); }
     .st-polaroid .snap::before { content:""; position:absolute; top:-14px; left:50%; width:90px; height:28px; margin-left:-45px; background:rgba(235,224,180,.72); transform:rotate(-3deg); box-shadow:0 1px 3px rgba(0,0,0,.2); }
-    .st-polaroid .snap .ink { position:absolute; left:0; right:0; bottom:14px; text-align:center; color:#3c372c; font:italic 1.15rem/1 "Segoe Script","Bradley Hand","Brush Script MT",cursive; }
+    .slide.has-capbar .snap { --capbar:34px; }
+    .capbar { box-sizing:border-box; width:100%; height:34px; padding:0 10px; background:#fbf8f0; color:#3c372c; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font:italic 17px/34px "Segoe Script","Bradley Hand","Brush Script MT",cursive; box-shadow:0 -1px 0 rgba(60,55,44,.18); }
+    .st-rounded .capbar { border-radius:0 0 9px 9px; }
+    .st-polaroid .snap .ink { box-sizing:border-box; padding:0 14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; position:absolute; left:0; right:0; bottom:14px; text-align:center; color:#3c372c; font:italic 1.15rem/1.35 "Segoe Script","Bradley Hand","Brush Script MT",cursive; }
     .st-framed .snap { --bw:32px; padding:18px; background:#f2ece0; border:14px solid; border-image:linear-gradient(135deg,#e6cf94,#a8823a 45%,#efdba5 60%,#8c6a2c) 1; box-shadow:0 22px 50px rgba(0,0,0,.55), inset 0 0 14px rgba(0,0,0,.25); }
-    .st-film .snap { --bw:0px; --fw:28px; --fh:60px; padding:28px 14px; background:#15130f; background-image:repeating-linear-gradient(90deg, transparent 0 14px, #d9d2c0 14px 24px, transparent 24px 38px); background-size:100% 12px; background-repeat:repeat-x; background-position:0 8px; box-shadow:0 22px 50px rgba(0,0,0,.5); }
+    .st-film .snap { --bw:0px; --fw:28px; --fh:calc(60px + var(--capbar, 0px)); padding:28px 14px; background:#15130f; background-image:repeating-linear-gradient(90deg, transparent 0 14px, #d9d2c0 14px 24px, transparent 24px 38px); background-size:100% 12px; background-repeat:repeat-x; background-position:0 8px; box-shadow:0 22px 50px rgba(0,0,0,.5); }
     .st-film .snap::after { content:""; position:absolute; left:0; right:0; bottom:8px; height:12px; background-image:repeating-linear-gradient(90deg, transparent 0 14px, #d9d2c0 14px 24px, transparent 24px 38px); }
     .st-film .snap img { border:1px solid #000; }
     .snap img { filter:var(--pf, none); }
@@ -496,8 +499,8 @@
 
         <section class="group">
           <h3>Text</h3>
-          <label class="field"><span>Date label</span><input type="text" id="fDate" maxlength="40" placeholder="e.g. 1985 or Summer 1972"></label>
-          <label class="field"><span>Caption (optional)</span><textarea id="fCaption" maxlength="600" placeholder="Add a memory or a few words about this photo…"></textarea></label>
+          <label class="field"><span>Caption text</span><input type="text" id="fDate" maxlength="60" placeholder="e.g. 1985 · Summer at the beach"></label>
+          <p class="note quiet" style="margin:-4px 0 0">One line under the photo. Long text shrinks to fit.</p>
         </section>
 
         <section class="group">
@@ -1052,8 +1055,8 @@
     }
     function renderSlide(file, index) {
       const section = document.createElement('section');
-      const style = styleOf(file, index), caption = captionOf(file), date = labelOf(file);
-      section.className = `slide st-${style}${caption ? ' has-caption' : ''}`;
+      const style = styleOf(file, index), text = labelOf(file);
+      section.className = `slide st-${style}${text && style !== 'polaroid' ? ' has-capbar' : ''}`;
       section.dataset.file = file;
       applyFilterVars(section, file);
       const bg = document.createElement('div');
@@ -1089,16 +1092,10 @@
       if (style === 'polaroid') snap.style.setProperty('--tilt', `${index % 2 ? -2 : 2}deg`);
       else if (style === 'film') snap.style.setProperty('--tilt', `${index % 2 ? -1 : 1}deg`);
       snap.append(img);
-      if (style === 'polaroid') { const ink = document.createElement('div'); ink.className = 'ink'; ink.textContent = date; snap.append(ink); }
+      if (style === 'polaroid') { const ink = document.createElement('div'); ink.className = 'ink cap-text'; ink.textContent = text; snap.append(ink); }
+      else if (text) { const bar = document.createElement('div'); bar.className = 'capbar cap-text'; bar.textContent = text; snap.append(bar); } // a white strip as wide as the photo, so the words read on any frame
       fig.append(snap);
       section.append(bg, fig);
-      if (date || caption) {
-        const meta = document.createElement('div');
-        meta.className = 'meta';
-        if (date) { const d = document.createElement('div'); d.className = 'date'; d.textContent = date; meta.append(d); }
-        if (caption) { const c = document.createElement('p'); c.className = 'caption'; c.textContent = caption; meta.append(c); }
-        section.append(meta);
-      }
       return section;
     }
 
@@ -1128,7 +1125,16 @@
       img.style.setProperty('--nw', img.naturalWidth);
       img.style.setProperty('--r', img.naturalWidth / img.naturalHeight);
       img.classList.add('ready');
+      requestAnimationFrame(() => fitCaption(img.parentNode.querySelector('.cap-text')));
     }
+    function fitCaption(el) { // one line, exactly as wide as the photo: shrink the type until it fits
+      if (!el) return;
+      const max = 19; // the same handwriting, same size, on every frame
+      let size = max; el.style.fontSize = `${size}px`;
+      while (el.scrollWidth > el.clientWidth + 1 && size > 9) { size -= 0.5; el.style.fontSize = `${size}px`; }
+    }
+    let fitTimer;
+    window.addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => stage.querySelectorAll('.slide .cap-text').forEach(fitCaption), 150); });
     function load(index) {
       for (let i = index - 1; i <= index + 2; i++) {
         const img = slides[i]?.querySelector('img[data-src]');
@@ -1354,7 +1360,6 @@
       const f = files[current - 1], e = state.slides[f] || {};
       $('slideWhich').textContent = `Slide ${current} of ${files.length}`;
       if (document.activeElement !== $('fDate')) $('fDate').value = dateOf(f);
-      if (document.activeElement !== $('fCaption')) $('fCaption').value = e.caption || '';
       const sc = e.scale || 100; $('fScale').value = sc; $('fScaleOut').textContent = `${sc}%`;
       $('fStyle').value = e.style || 'default'; $('fTx').value = e.tx || 'default';
       $('fMotion').value = e.motion || 'default';
@@ -1829,7 +1834,6 @@
     // Per-slide edits
     function liveSlide(fn) { const f = files[current - 1]; if (!f) return; fn(edit(f), f); save(); refreshSlide(current); }
     $('fDate').addEventListener('input', e => liveSlide(s => { s.date = e.target.value; }));
-    $('fCaption').addEventListener('input', e => liveSlide(s => { s.caption = e.target.value; }));
     $('fStyle').addEventListener('change', e => liveSlide(s => { s.style = e.target.value; }));
     $('fTx').addEventListener('change', e => { liveSlide(s => { s.tx = e.target.value; }); previewTransition(); });
     $('fScale').addEventListener('input', e => { // resize without re-rendering, so the photo doesn't flicker while dragging
