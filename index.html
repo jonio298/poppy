@@ -234,9 +234,13 @@
     .grip { flex:none; width:30px; height:66px; border:0; border-radius:8px; background:transparent; color:#7d8f7d; cursor:grab; touch-action:none; display:grid; place-items:center; }
     .grip:hover, .grip:focus-visible { color:#d8ba7a; outline:none; } .grip svg { width:16px; height:16px; fill:currentColor; }
     .info { flex:1; min-width:0; pointer-events:none; }
-    .info b { display:block; font-size:.82rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .info b i { color:#d8ba7a; font-style:normal; }
-    .info small { display:block; color:#8fa08f; font-size:.72rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .info b { display:block; font-size:.82rem; line-height:1.25; overflow-wrap:anywhere; } .info b i { color:#d8ba7a; font-style:normal; }
+    .info small { display:block; margin-top:2px; color:#8fa08f; font-size:.72rem; line-height:1.3; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:6; -webkit-box-orient:vertical; overflow:hidden; } /* wraps; only a very long story is shortened, after six lines */
     .rowbtn, .del { flex:none; width:36px; height:36px; display:grid; place-items:center; border-radius:50%; cursor:pointer; }
+    .rowacts { flex:none; display:grid; grid-template-columns:repeat(2, 30px); gap:4px; }   /* send + edit side by side, delete underneath */
+    .rowacts .del { grid-column:1 / -1; }
+    .rowacts .rowbtn, .rowacts .del { width:auto; height:28px; border-radius:14px; }
+    .rowacts .rowbtn svg { width:14px; height:14px; } .rowacts .del svg { width:11px; height:11px; }
     .rowbtn { border:1px solid rgba(255,255,255,.18); background:transparent; color:#cfd6c8; }
     .rowbtn:hover, .rowbtn:focus-visible { border-color:#d8ba7a; color:#d8ba7a; outline:none; }
     .rowbtn svg { width:15px; height:15px; fill:currentColor; }
@@ -274,8 +278,14 @@
     .list.sec-drag .item { display:none !important; }   /* while a song is being dragged, only the song bars show */
     .sec .secgrip { width:24px; height:30px; margin-left:-6px; }
     .sec.placeholder { opacity:.35; border-style:dashed; }
+    /* dragging a slide: every song bar pulses softly green ("you can drop here"); the one under the pointer glows brighter */
+    @keyframes dropHint { 0%,100% { box-shadow:0 0 0 1px rgba(80,220,130,.25), 0 0 6px rgba(80,220,130,.12); } 50% { box-shadow:0 0 0 2px rgba(80,220,130,.55), 0 0 14px 2px rgba(80,220,130,.3); } }
+    @keyframes dropGlow { 0%,100% { box-shadow:0 0 0 2px rgba(80,230,140,.85), 0 0 16px 3px rgba(80,230,140,.5); } 50% { box-shadow:0 0 0 3px rgba(130,255,175,1), 0 0 32px 10px rgba(80,230,140,.75); } }
+    .list.slide-drag .sec { animation:dropHint 1.4s ease-in-out infinite; }
+    .list.slide-drag .sec.drop-target { animation:dropGlow .8s ease-in-out infinite; background:color-mix(in srgb, #3ddc84 24%, #141c17); }
+    @media (prefers-reduced-motion:reduce) { .list.slide-drag .sec { animation:none; box-shadow:0 0 0 1px rgba(80,220,130,.4); } .list.slide-drag .sec.drop-target { animation:none; box-shadow:0 0 0 3px rgba(130,255,175,1), 0 0 22px 6px rgba(80,230,140,.6); } }
     .ghost-sec { position:fixed; z-index:60; margin:0; pointer-events:none; box-shadow:0 14px 34px rgba(0,0,0,.55); opacity:.97; }
-    @media (max-width:520px) { .item { gap:6px; } .rowbtn, .del { width:32px; height:32px; } .info small { white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; } }
+    @media (max-width:520px) { .item { gap:6px; } .grip { width:26px; } .rowbtn, .del { width:32px; height:32px; } }
     .sec .chev { flex:none; padding-left:4px; color:#b9c4b9; font-size:1rem; }
     .sec:focus-visible { outline:2px solid var(--sc); outline-offset:2px; }
     .sec.has-now { box-shadow:inset 0 0 0 2px var(--sc); }
@@ -1435,7 +1445,7 @@
         const li = document.createElement('li');
         li.className = 'item'; li.dataset.file = f; li.dataset.index = i + 1;
         if (state.opts.timeline) { li.style.setProperty('--sc', SONGS[songOf(f) - 1].color); li.dataset.song = songOf(f); if (collapsed.has(songOf(f))) li.classList.add('folded'); }
-        li.innerHTML = `<button class="grip" type="button" aria-label="Move slide ${i + 1} (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><img loading="lazy" decoding="async" alt="" draggable="false" src="${thumbOf(f)}"><div class="info"><b><i>${i + 1}</i> · </b><small></small></div><button class="rowbtn send" type="button" aria-label="Send slide ${i + 1} to a song" title="Send to a song">${ICON_NOTE}</button><button class="rowbtn" type="button" aria-label="Edit slide ${i + 1}">${ICON_PEN}</button><button class="del" type="button" aria-label="Delete slide ${i + 1}">${ICON_X}</button>`;
+        li.innerHTML = `<button class="grip" type="button" aria-label="Move slide ${i + 1} (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><img loading="lazy" decoding="async" alt="" draggable="false" src="${thumbOf(f)}"><div class="info"><b><i>${i + 1}</i> · </b><small></small></div><div class="rowacts"><button class="rowbtn send" type="button" aria-label="Send slide ${i + 1} to a song" title="Send to a song">${ICON_NOTE}</button><button class="rowbtn" type="button" aria-label="Edit slide ${i + 1}">${ICON_PEN}</button><button class="del" type="button" aria-label="Delete slide ${i + 1}">${ICON_X}</button></div>`;
         li.querySelector('b').append(document.createTextNode(dateOf(f) || 'No date'));
         li.querySelector('small').textContent = (isOwn(f) ? 'Your photo · ' : '') + (captionOf(f) || byFile[f].caption || '').replace(/\s+/g, ' ').trim();
         return li;
@@ -1594,12 +1604,17 @@
       ghost.classList.add('ghost'); ghost.style.cssText = `width:${rect.width}px;left:${rect.left}px;top:${rect.top}px`;
       document.body.append(ghost);
       li.classList.add('placeholder');
+      if (state.opts.timeline) listEl.classList.add('slide-drag'); // lights up the song bars as drop targets
+      let dropBar = null;
       const noScroll = ev => ev.preventDefault();
       window.addEventListener('touchmove', noScroll, { passive: false }); // keep the list from scrolling under a finger that is dragging
       let lastY = e.clientY, raf;
       const move = ev => {
         lastY = ev.clientY;
         ghost.style.top = `${ev.clientY - offY}px`;
+        const over = state.opts.timeline ? [...listEl.querySelectorAll('.sec')].find(h => { const r = h.getBoundingClientRect(); return ev.clientY >= r.top && ev.clientY <= r.bottom; }) || null : null;
+        if (over !== dropBar) { dropBar?.classList.remove('drop-target'); dropBar = over; dropBar?.classList.add('drop-target'); }
+        if (dropBar) return; // over a song bar: the slide will go INTO that song, so leave the placeholder where it is
         const others = [...listEl.children].filter(el => el !== li && !el.classList.contains('cover-row') && !el.classList.contains('folded')); // slides and song headers
         const before = others.find(it => { const r = it.getBoundingClientRect(); return ev.clientY < r.top + r.height / 2; });
         if (before) { if (li.nextElementSibling !== before) listEl.insertBefore(li, before); } else listEl.append(li);
@@ -1610,14 +1625,19 @@
         raf = requestAnimationFrame(autoscroll);
       };
       autoscroll();
-      const done = () => {
+      const done = ev => {
         cancelAnimationFrame(raf);
         window.removeEventListener('pointermove', move);
         window.removeEventListener('pointerup', done);
         window.removeEventListener('pointercancel', done);
         window.removeEventListener('touchmove', noScroll);
         justDragged = true; setTimeout(() => { justDragged = false; }, 120);
-        ghost.remove(); li.classList.remove('placeholder');
+        ghost.remove(); li.classList.remove('placeholder'); listEl.classList.remove('slide-drag');
+        if (dropBar) { // let go on a song bar: into that song, at the end
+          dropBar.classList.remove('drop-target');
+          if (ev && ev.type === 'pointercancel') return renderList();   // the touch scrolled away: not a drop
+          return sendTo(li.dataset.file, Number(dropBar.dataset.song), 'end');
+        }
         const order = [], map = { ...state.songMap };
         let song = 1;
         [...listEl.children].forEach(el => {
