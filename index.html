@@ -222,6 +222,7 @@
     .panel-head { gap:10px; }
     .mode { display:inline-flex; padding:3px; border-radius:999px; background:#0d130f; border:1px solid rgba(255,255,255,.14); }
     .seg { padding:9px 16px; border:0; border-radius:999px; background:transparent; color:#9bab9b; font:700 .74rem Arial,sans-serif; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; }
+    .seg.playing:not(.on) { background:rgba(216,186,122,.2); color:#d8ba7a; }
     .seg:hover { color:#d8ba7a; } .seg.on, .seg.on:hover { background:#d8ba7a; color:#141c17; }
     .list { list-style:none; margin:0 0 16px; padding:0; display:flex; flex-direction:column; gap:6px; }
     .item { touch-action:pan-y; display:flex; align-items:center; gap:8px; padding:6px 6px 6px 4px; border:1px solid rgba(255,255,255,.1); border-radius:12px; background:#18221c; color:#eee9dc; font:400 .85rem/1.25 Arial,sans-serif; cursor:pointer; user-select:none; -webkit-user-select:none; }
@@ -230,6 +231,9 @@
     .item[data-file] { cursor:grab; }
     .item.ghost { position:fixed; z-index:60; margin:0; pointer-events:none; box-shadow:0 14px 34px rgba(0,0,0,.55); border-color:#d8ba7a; opacity:.97; }
     .item.cover-row { padding-left:10px; }
+    @keyframes nowPulse { 0%,100% { box-shadow:inset 4px 0 0 var(--sc,#d8ba7a), 0 0 0 0 rgba(216,186,122,0); } 50% { box-shadow:inset 4px 0 0 var(--sc,#d8ba7a), 0 0 0 3px rgba(216,186,122,.45); } }
+    .list.is-playing .item.now { animation:nowPulse 1.6s ease-in-out infinite; }   /* the row that is on screen right now */
+    @media (prefers-reduced-motion:reduce) { .list.is-playing .item.now { animation:none; } }
     .item img { flex:none; width:78px; height:66px; object-fit:cover; border-radius:6px; background:#0d130f; -webkit-user-drag:none; user-select:none; cursor:zoom-in; }
     .grip { flex:none; width:30px; height:66px; border:0; border-radius:8px; background:transparent; color:#7d8f7d; cursor:grab; touch-action:none; display:grid; place-items:center; }
     .grip:hover, .grip:focus-visible { color:#d8ba7a; outline:none; } .grip svg { width:16px; height:16px; fill:currentColor; }
@@ -268,6 +272,13 @@
     .sec { display:flex; align-items:center; gap:10px; margin:12px 0 2px; padding:9px 10px; border-radius:10px; border-left:5px solid var(--sc); background:color-mix(in srgb, var(--sc) 15%, #141c17); color:#eee9dc; font:400 .82rem/1.25 Arial,sans-serif; cursor:pointer; list-style:none; }
     .sec .num { flex:none; display:grid; place-items:center; width:26px; height:26px; border-radius:50%; background:var(--sc); color:#141c17; font:700 .8rem Arial,sans-serif; }
     .sec .nm { flex:1; min-width:0; } .sec b { display:block; font-size:.88rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .sec b { white-space:normal; overflow-wrap:anywhere; }
+    .durchip { flex:none; padding:5px 10px; border:1px solid color-mix(in srgb, var(--sc) 60%, transparent); border-radius:999px; background:rgba(0,0,0,.28); color:#eee9dc; font:700 .72rem Arial,sans-serif; cursor:pointer; white-space:nowrap; }
+    .durchip:hover, .durchip:focus-visible { background:var(--sc); color:#141c17; outline:none; }
+    .durchip.custom { border-color:#e8c070; } .durchip.custom::after { content:' ●'; color:#e8c070; font-size:.6rem; vertical-align:middle; }
+    .durchip.custom:hover::after, .durchip.custom:focus-visible::after { color:#141c17; }
+    .durinput { flex:none; width:74px; padding:6px 8px; border:2px solid var(--sc); border-radius:10px; background:#0d130f; color:#f5f1e8; font:700 .9rem Arial,sans-serif; text-align:center; }
+    .durinput:focus { outline:none; box-shadow:0 0 0 3px color-mix(in srgb, var(--sc) 35%, transparent); }
     .sec small { display:block; color:#b9c4b9; font-size:.72rem; } .sec.warn small { color:#f0c070; }
     .item[data-file] { box-shadow:inset 4px 0 0 var(--sc, transparent); }
     .item.folded { display:none; }
@@ -1150,13 +1161,18 @@
     async function keepAwake() { try { wakeLock = await navigator.wakeLock?.request('screen'); } catch (_) { /* optional */ } }
     // The Begin button goes away once the show is running, and returns if it stops while on the opening slide.
     function updateBegin() { $('begin').classList.toggle('gone', playing); } // not tied to the current slide: the intro slide is still on screen while it fades out
+    function updatePlayUi() { // the Play button in the Edit panel doubles as Pause, and the list shows it is live
+      const b = $('modePlay'); if (!b) return;
+      b.textContent = playing ? '❚❚ Pause' : '▶ Play'; b.classList.toggle('playing', playing); b.setAttribute('aria-pressed', String(playing));
+      listEl.classList.toggle('is-playing', playing);
+    }
     function play() {
-      playing = true; updateBegin(); slideStart = performance.now(); updateNowPlaying();
+      playing = true; updateBegin(); updatePlayUi(); slideStart = performance.now(); updateNowPlaying();
       playPause.innerHTML = ICON_PAUSE; playPause.setAttribute('aria-label', 'Pause slideshow');
       keepAwake(); schedule();
     }
     function pause() {
-      playing = false; clearTimeout(timer); updateBegin(); updateNowPlaying();
+      playing = false; clearTimeout(timer); updateBegin(); updatePlayUi(); updateNowPlaying();
       wakeLock?.release?.().catch(() => {}); wakeLock = null;
       playPause.innerHTML = ICON_PLAY; playPause.setAttribute('aria-label', 'Play slideshow');
     }
@@ -1238,7 +1254,7 @@
       document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === name)));
       document.querySelectorAll('.pane').forEach(p => { p.hidden = p.dataset.pane !== name; });
       if (name === 'slides') renderList();
-      if (name === 'slide') syncSlide();
+      if (name === 'slide') { if (current === 0 && slides.length > 1) show(1, { instant: true }); syncSlide(); } // nothing selected yet: start with the first slide
       if (name === 'versions') renderVersions();
       if (name === 'show') syncShow();
       const pane = document.querySelector(`.pane[data-pane="${name}"]`);
@@ -1432,6 +1448,28 @@
     }
     const toggleSong = n => setSongCollapsed(n, !collapsed.has(n));
 
+    // ---- Change a song's length right on its bar (type 3:05 or 185; leave it empty to go back to the recording's length) ----
+    function applySongLength(k, raw) {
+      const text = String(raw).trim(), def = SONGS[k - 1].secs, m = text.match(/^(\d+):([0-5]?\d)$/);
+      const secs = text === '' ? def : m ? Number(m[1]) * 60 + Number(m[2]) : parseInt(text, 10);
+      if (!(secs >= 10 && secs <= 1200)) { toast('Type a length between 0:10 and 20:00, like 3:05.'); renderList(); return false; }
+      if (secs === def) delete state.songLens[k]; else state.songLens[k] = secs;
+      save(); renderList(); renderSongLens(); updateNowPlaying();
+      const sec = timeline().byId[k];
+      toast(`“${sec.title}” is now ${fmtDur(secs)}${sec.files.length && sec.per ? `. Its ${sec.files.length} slides get ${sec.per.toFixed(1)}s each.` : '.'}`);
+      return true;
+    }
+    function editSongLength(chip, sec) {
+      const input = document.createElement('input');
+      input.className = 'durinput'; input.type = 'text'; input.inputMode = 'numeric'; input.value = fmtDur(sec.secs); input.placeholder = fmtDur(SONGS[sec.n - 1].secs);
+      input.setAttribute('aria-label', `Length of ${sec.title} (minutes:seconds)`);
+      chip.replaceWith(input); input.focus(); input.select();
+      let finished = false;
+      const finish = commit => { if (finished) return; finished = true; if (commit) applySongLength(sec.n, input.value); else renderList(); };
+      input.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') finish(true); else if (e.key === 'Escape') finish(false); });
+      input.addEventListener('blur', () => finish(true));
+      ['pointerdown', 'click'].forEach(t => input.addEventListener(t, e => e.stopPropagation()));
+    }
     function renderList() {
       const pane = listEl.closest('.pane'), top = pane.scrollTop;
       listEl.innerHTML = '';
@@ -1455,16 +1493,20 @@
         h.className = 'sec'; h.dataset.song = sec.n; h.style.setProperty('--sc', sec.color);
         const fast = n && sec.per && sec.per < 5, slow = n && sec.per > 30;
         if (!n || fast || slow) h.classList.add('warn');
-        h.innerHTML = `<button class="grip secgrip" type="button" aria-label="Move this song with all its slides (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><span class="num"></span><div class="nm"><b></b><small></small></div><span class="chev" aria-hidden="true"></span>`;
+        h.innerHTML = `<button class="grip secgrip" type="button" aria-label="Move this song with all its slides (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><span class="num"></span><div class="nm"><b></b><small></small></div><button class="durchip" type="button"></button><span class="chev" aria-hidden="true"></span>`;
         const folded = collapsed.has(sec.n);
         h.classList.toggle('collapsed', folded); h.tabIndex = 0; h.setAttribute('role', 'button'); h.setAttribute('aria-expanded', String(!folded));
         h.querySelector('.chev').textContent = folded ? '▸' : '▾';
         h.querySelector('.num').textContent = sec.pos;
+        const chip = h.querySelector('.durchip');
+        chip.textContent = `⏱ ${fmtDur(sec.secs)}`; chip.classList.toggle('custom', state.songLens[sec.n] > 0);
+        chip.title = state.songLens[sec.n] > 0 ? `Length changed (the recording is ${fmtDur(SONGS[sec.n - 1].secs)}). Click to edit.` : 'Click to change this song’s length';
+        chip.onclick = e => { e.stopPropagation(); editSongLength(chip, sec); };
         h.querySelector('b').textContent = `${sec.title} — ${sec.artist}`;
         h.querySelector('small').textContent = `${fmtDur(sec.start)} → ${fmtDur(sec.start + sec.secs)} · ${n} slide${n === 1 ? '' : 's'}`
           + (!n ? ' · no photos yet' : sec.per ? ` · ${sec.per.toFixed(1)}s each${fast ? ' (very fast)' : slow ? ' (very slow)' : ''}` : ' · custom times');
-        h.onclick = e => { if (justDragged || e.target.closest('.secgrip')) return; toggleSong(sec.n); };
-        h.onkeydown = e => { if (e.target.closest('.secgrip')) return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSong(sec.n); } };
+        h.onclick = e => { if (justDragged || e.target.closest('.secgrip, .durchip, .durinput')) return; toggleSong(sec.n); };
+        h.onkeydown = e => { if (e.target.closest('.secgrip, .durchip, .durinput')) return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSong(sec.n); } };
         return h;
       };
       if (state.opts.timeline) {
@@ -1487,6 +1529,26 @@
       const pane = listEl.closest('.pane'), pr = pane.getBoundingClientRect(), r = el.getBoundingClientRect();
       if (r.top < pr.top) pane.scrollTop += r.top - pr.top - 8; else if (r.bottom > pr.bottom) pane.scrollTop += r.bottom - pr.bottom + 8;
     }
+    let browsingUntil = 0; // if you scroll the list yourself while it plays, it leaves you alone for a few seconds
+    let followTimer;
+    function scrollPaneTo(pane, top, ms = 380) { // our own eased scroll (the browser's smooth scrolling can be skipped or interrupted)
+      clearInterval(followTimer);
+      const from = pane.scrollTop, delta = top - from;
+      if (Math.abs(delta) < 1) return;
+      const t0 = performance.now();
+      followTimer = setInterval(() => {
+        const k = Math.min(1, (performance.now() - t0) / ms), ease = 1 - Math.pow(1 - k, 3);
+        pane.scrollTop = from + delta * ease;
+        if (k >= 1) clearInterval(followTimer);
+      }, 16);
+    }
+    ['wheel', 'touchstart', 'pointerdown'].forEach(t => listEl.closest('.pane').addEventListener(t, () => { browsingUntil = performance.now() + 4000; clearInterval(followTimer); }, { passive: true }));
+    function followInPane(el) {
+      if (!playing) return revealInPane(el);              // clicking around: just bring it into view
+      const pane = listEl.closest('.pane'), pr = pane.getBoundingClientRect(), r = el.getBoundingClientRect();
+      const top = pane.scrollTop + (r.top - pr.top) - (pr.height - r.height) / 2;   // keep the playing slide in the middle of the list
+      scrollPaneTo(pane, Math.max(0, top));
+    }
     let revealedFile = null;
     function markNow(scroll = true, force = false) {
       let nowEl = null;
@@ -1495,7 +1557,11 @@
       const which = current > 0 ? files[current - 1] : '#opening', changed = which !== revealedFile;
       revealedFile = which;
       // follow the selection only when it moved (arrows, Previous/Next, Send to…), never because the list was redrawn or a song was folded
-      if (scroll && (changed || force) && nowEl && activeTab() === 'slides' && !nowEl.classList.contains('folded')) revealInPane(nowEl);
+      if (scroll && (changed || force) && activeTab() === 'slides') {
+        // a slide inside a folded song can't be seen, so follow that song's bar instead
+        const target = nowEl && nowEl.classList.contains('folded') ? listEl.querySelector(`.sec[data-song="${nowEl.dataset.song}"]`) : nowEl;
+        if (target && !(playing && performance.now() < browsingUntil)) followInPane(target);
+      }
     }
     function thumbBtn(file, label, cls) {
       const b = document.createElement('button');
@@ -1540,7 +1606,7 @@
     listEl.addEventListener('pointerdown', e => {
       if (e.button > 0) return;
       const bar = e.target.closest('.sec');
-      if (bar) { if (e.target.closest('.secgrip')) return startSongDrag(e, bar); return armDrag(e, bar, startSongDrag); }
+      if (bar) { if (e.target.closest('.durchip, .durinput')) return; if (e.target.closest('.secgrip')) return startSongDrag(e, bar); return armDrag(e, bar, startSongDrag); }
       const li = e.target.closest('.item[data-file]');
       if (!li || e.target.closest('.del, .rowbtn')) return;
       if (e.target.closest('.grip')) return startDrag(e, li);   // handle: drag right away
@@ -1868,7 +1934,8 @@
     document.addEventListener('mouseout', e => { if (e.target.closest?.(ZOOM_SELECTOR)) hideZoom(); });
     ['scroll', 'wheel', 'pointerdown', 'keydown'].forEach(t => document.addEventListener(t, hideZoom, true));
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => selectTab(t.dataset.tab)));
-    $('modePlay').onclick = () => closePanel(true);
+    $('modePlay').onclick = () => togglePlay();          // plays (or pauses) right here, with the Edit panel still open
+    $('modeEdit').onclick = () => closePanel();           // the lit Edit segment closes the panel; playback carries on
     $('saveBtn').onclick = commit;
     // Keyboard shortcuts card (the ? button, or the ? key)
     const helpCard = $('helpCard');
