@@ -647,7 +647,7 @@
       v: 1,
       theme: { preset: 'forest', bg: null, accent: null, font: 'classic' },
       cover: { eyebrow: 'In Loving Memory', title: 'Charles Ross', names: '“Charlie”   “Dad”   “Poppy”' },
-      opts: { timeline: true, tx: 'random', style: 'auto', cutoff: 1990, motion: 'classic', size: 99, film: true, loop: false, seconds: 0, coverSeconds: 12, filter: 'default' },
+      opts: { timeline: true, tx: 'random', style: 'auto', cutoff: 1990, motion: 'classic', size: 99, film: true, loop: false, seconds: 12, coverSeconds: 12, filter: 'default' },
       slides: {}, order: [], deleted: [], custom: [], songMap: {}, songLens: {}, songOrder: [1, 2, 3, 4, 5, 6, 7],
     });
     let state = defaults();
@@ -953,20 +953,24 @@
       counts.forEach((c, si) => { for (let j = 0; j < c; j++) defaultSongMap[rest[idx++].file] = si + 1; });
     }
     const songOf = f => Math.min(SONGS.length, Math.max(1, Number(state.songMap[f]) || defaultSongMap[f] || SONGS.length)); // photos added later start in the last song
-    const songSecs = k => (state.songLens[k] > 0 ? Number(state.songLens[k]) : SONGS[k - 1].secs);
+    const recSecs = k => (state.songLens[k] > 0 ? Number(state.songLens[k]) : SONGS[k - 1].secs);
+    const equalSecs = () => (state.opts.timeline && state.opts.seconds > 0 ? state.opts.seconds : 0); // every slide the same length
+    const songSecs = k => (equalSecs() ? timeline().byId[k].secs : recSecs(k));
     const songPos = k => state.songOrder.indexOf(k) + 1; // where a song sits in the show (1 = first)
     let tlCache = null;
     function timeline() { // the songs, in the current song order, laid over the current slide order
       if (tlCache) return tlCache;
       const byId = {};
-      const secs = state.songOrder.map((id, i) => (byId[id] = { ...SONGS[id - 1], secs: songSecs(id), pos: i + 1, files: [], start: 0, per: 0 }));
+      const eq = equalSecs();
+      const secs = state.songOrder.map((id, i) => (byId[id] = { ...SONGS[id - 1], secs: recSecs(id), pos: i + 1, files: [], start: 0, per: 0 }));
       files.forEach(f => byId[songOf(f)].files.push(f));
       let start = 0;
       secs.forEach(sec => {
-        sec.start = start; start += sec.secs;
         const own = f => (state.slides[f]?.seconds > 0 ? state.slides[f].seconds : 0);
         const fixed = sec.files.reduce((a, f) => a + own(f), 0), free = sec.files.filter(f => !own(f)).length;
-        sec.per = free ? Math.max(1, (sec.secs - fixed) / free) : 0;
+        if (eq) { sec.per = free ? eq : 0; sec.secs = fixed + free * eq; } // same length each; the song is as long as its slides
+        else sec.per = free ? Math.max(1, (sec.secs - fixed) / free) : 0;
+        sec.start = start; start += sec.secs;
       });
       tlCache = { secs, byId, total: start };
       return tlCache;
@@ -1314,6 +1318,7 @@
         row.innerHTML = `<button class="grip songgrip" type="button" aria-label="Move this track (drag, or use the up and down arrow keys)">${ICON_GRIP}</button><i></i><span></span><button class="step" type="button" data-step="-5" aria-label="5 seconds shorter" title="5 seconds shorter (Shift: 30)">−</button><input type="text" inputmode="numeric" aria-label="Length"><button class="step" type="button" data-step="5" aria-label="5 seconds longer" title="5 seconds longer (Shift: 30)">+</button>`;
         row.querySelector('span').textContent = `${i + 1} · ${sg.title}`;
         const input = row.querySelector('input'); input.dataset.song = sg.n; input.value = fmtDur(songSecs(sg.n));
+        if (equalSecs()) { row.classList.remove('custom'); row.querySelectorAll('input, .step').forEach(el => { el.disabled = true; }); row.title = 'Every slide is the same length, so this song is as long as its slides.'; }
         box.append(row);
       });
       const total = SONGS.reduce((a, sg) => a + songSecs(sg.n), 0);
@@ -1323,12 +1328,8 @@
       $('fEyebrow').value = state.cover.eyebrow; $('fTitle').value = state.cover.title; $('fNames').value = state.cover.names;
       $('oTx').value = state.opts.tx; $('oStyle').value = state.opts.style; $('oMotion').value = state.opts.motion; $('oSize').value = String(state.opts.size); $('oFilm').checked = state.opts.film; $('oLoop').checked = !!state.opts.loop; $('oCutoff').value = state.opts.cutoff; $('oCoverSecs').value = state.opts.coverSeconds || 12; $('oFilter').value = state.opts.filter || 'default';
       $('oTimeline').checked = !!state.opts.timeline; renderSongLens();
-      $('oSeconds').disabled = !!state.opts.timeline;
       $('oSeconds').value = state.opts.seconds || '';
-      $('oSeconds').placeholder = `Auto (${(PLAYLIST_DURATION / 1000 / Math.max(1, files.length)).toFixed(1)}s)`;
-      $('secondsNote').textContent = state.opts.timeline ? 'Set by the songs while “Time the slides to the songs” is on.' : state.opts.seconds
-        ? `${files.length} photos × ${state.opts.seconds}s ≈ ${Math.round(files.length * state.opts.seconds / 60)} min. Clear the box to fit the original 22:24 length.`
-        : `Automatic: ${files.length} photos spread over the original 22:24 length.`;
+      syncShow2();
     }
     function syncSlide() {
       const has = current > 0;
@@ -1459,6 +1460,7 @@
 
     // ---- Change a song's length right on its bar (type 3:05 or 185; leave it empty to go back to the recording's length) ----
     function applySongLength(k, raw, quiet = false) {
+      if (equalSecs()) { toast(`Every slide is ${state.opts.seconds}s, so a song is as long as its slides. Clear “Seconds per photo” on the Show tab to set song lengths.`); renderList(); renderSongLens(); return false; }
       const text = String(raw).trim(), def = SONGS[k - 1].secs, m = text.match(/^(\d+):([0-5]?\d)$/);
       const secs = text === '' ? def : m ? Number(m[1]) * 60 + Number(m[2]) : parseInt(text, 10);
       if (!(secs >= 10 && secs <= 1200)) { toast('Type a length between 0:10 and 20:00, like 3:05.'); renderList(); return false; }
@@ -1896,12 +1898,15 @@
     $('oFilm').addEventListener('change', e => { state.opts.film = e.target.checked; save(); applyOpts(); });
     $('oSeconds').addEventListener('input', e => {
       const n = parseInt(e.target.value, 10);
-      state.opts.seconds = n >= 2 && n <= 120 ? n : 0; save(); syncShow2();
+      state.opts.seconds = n >= 2 && n <= 120 ? n : 0; save(); syncShow2(); renderList(); updateNowPlaying();
     });
     function syncShow2() { // update only the note while typing so the field keeps focus
-      $('secondsNote').textContent = state.opts.timeline ? 'Set by the songs while “Time the slides to the songs” is on.' : state.opts.seconds
-        ? `${files.length} photos × ${state.opts.seconds}s ≈ ${Math.round(files.length * state.opts.seconds / 60)} min. Clear the box to fit the original 22:24 length.`
-        : `Automatic: ${files.length} photos spread over the original 22:24 length.`;
+      const n = state.opts.seconds, tl = state.opts.timeline;
+      $('oSeconds').placeholder = tl ? 'Fit each song' : `Auto (${(PLAYLIST_DURATION / 1000 / Math.max(1, files.length)).toFixed(1)}s)`;
+      $('secondsNote').textContent = n
+        ? `${files.length} photos × ${n}s ≈ ${fmtDur(files.length * n)}${tl ? ' (the songs run about 22:34 together). Each song is as long as its slides; clear the box to stretch the slides to each song’s own length instead.' : '. Clear the box to fit the original 22:24 length.'}`
+        : tl ? 'Each song’s slides share that song’s length. Type a number of seconds to give every slide the same length.' : `Automatic: ${files.length} photos spread over the original 22:24 length.`;
+      renderSongLens();
     }
 
     // Export / import / reset

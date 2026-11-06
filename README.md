@@ -32,6 +32,7 @@ The slideshow is timed to seven songs (What a Wonderful World, When I Fall in Lo
 - **Send to a song:** the ♪ button on any slide in the list, or **Send to…** at the top of the Slide tab, moves a slide into a song. You can also drag a slide into another song's section. You can also drag a slide and **drop it onto a song's bar**: while you drag, every song bar pulses green, and the one under your pointer glows brighter. The slide goes to the end of that song (even if the song is folded).
 - **Now playing:** outside full screen, a bar under the slideshow shows the current song, its artist and the time within it (“Up next” on the opening slide, “Paused on” when paused).
 - **Show** tab → **Songs:** turn the song timing on or off. Under **Adjust track length**, each song has − and + buttons (5 seconds a step, 30 with Shift) beside its time, which you can also type; a yellow time is one you changed. Drag a track by its ⠿ handle (or anywhere on the row; press and hold on a phone, or use Up/Down on the handle) to reorder the songs, and their slides move with them.
+- **Every slide is 12 seconds** by default (Show tab → *Seconds per photo*), which makes the 114 photos run about 22:48, close to the songs' 22:34 together. Each song is then as long as its slides, so the song-length boxes are greyed out. Clear *Seconds per photo* to stretch each song's slides to that song's own length instead.
 - **Default transition** is Random (never repeats) on a fresh load and after Reset.
 
 ## Look
