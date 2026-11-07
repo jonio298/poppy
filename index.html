@@ -757,6 +757,35 @@
       const vol = $('eulVol'); try { const v = localStorage.getItem('poppy-eul-vol'); if (v !== null) vol.value = v; } catch (e) {}
       au.volume = vol.value / 100;
       vol.addEventListener('input', () => { au.volume = vol.value / 100; try { localStorage.setItem('poppy-eul-vol', vol.value); } catch (e) {} });
+      // While the eulogy plays it drives the slides: 40, 41, 44 (to 0:25), 50 held until 0:55, then good pictures of Poppy in random order.
+      const OPEN = [[40, 0], [41, 25 / 3], [44, 50 / 3]], HOLD = [50, 25, 55], STEP = 8;
+      let cues = null, eulOn = false;
+      const nameAt = n => (BASE && BASE.order && BASE.order[n - 1]) || files[n - 1];
+      function buildCues() {
+        const named = [...OPEN.map(o => o[0]), HOLD[0]].map(nameAt);
+        const pool = files.filter(f => !named.includes(f) && byFile[f] && byFile[f].category !== 'Poppy and his family');
+        const src = pool.length ? pool : files.filter(f => !named.includes(f));
+        const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+        const c = OPEN.map((o, i) => ({ t: o[1], f: named[i], dur: (i < 2 ? OPEN[i + 1][1] : HOLD[1]) - o[1] }));
+        c.push({ t: HOLD[1], f: named[3], dur: HOLD[2] - HOLD[1] });
+        let order = [], t = HOLD[2];
+        while (t < 600 && src.length) { if (!order.length) order = shuffle(src.slice()); c.push({ t, f: order.pop(), dur: STEP }); t += STEP; }
+        return c;
+      }
+      function cueSync() {
+        if (!eulOn || !cues) return;
+        if (playing) pause(); // the eulogy is in charge of the slides
+        let cue = cues[0]; for (const c of cues) if (c.t <= au.currentTime) cue = c; else break;
+        const idx = files.indexOf(cue.f) + 1;
+        if (idx > 0 && idx !== current) {
+          show(idx);
+          slides[current]?.querySelector('.fig')?.style.setProperty('--kb-dur', `${Math.round(cue.dur * 1000 + 2600)}ms`);
+        }
+      }
+      au.addEventListener('play', () => { if (!cues || au.currentTime < 1) cues = buildCues(); eulOn = true; cueSync(); });
+      au.addEventListener('timeupdate', cueSync);
+      au.addEventListener('seeked', cueSync);
+      au.addEventListener('ended', () => { eulOn = false; });
       seek.addEventListener('input', () => { if (au.duration) { au.currentTime = seek.value / 1000 * au.duration; sync(); } });
     })();
 
