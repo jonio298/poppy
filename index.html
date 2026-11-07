@@ -230,6 +230,8 @@
     .eulogy .eplay svg { width:22px; height:22px; fill:#1a1408; } .eulogy .eplay:focus-visible { outline:2px solid #fff; outline-offset:2px; }
     .eulogy .einfo { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; } .eulogy .einfo b { font-size:.9rem; color:#f5f1e8; } .eulogy .einfo span { font-size:.74rem; color:#8fa08f; }
     .eulogy .einfo input { width:100%; margin:6px 0 0; accent-color:#d8ba7a; }
+    .eulogy .evol { display:flex; align-items:center; gap:6px; color:#8fa08f; } .eulogy .evol svg { flex:none; width:14px; height:14px; fill:currentColor; }
+    .eulogy .einfo .evol input { width:90px; margin:0; }
     .eulogy output { flex:none; font:700 .74rem Arial,sans-serif; color:#d8ba7a; font-variant-numeric:tabular-nums; }
     .note { margin:0 0 16px; color:#8fa08f; font-size:.8rem; }
     .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px; margin-bottom:16px; }
@@ -543,7 +545,7 @@
     <div class="jonrow" id="jonRow" hidden><button class="reload-toggle on" id="jonSwitch" type="button" role="switch" aria-checked="true"><span>Jon’s Version</span><span class="rt-track"><i></i></span></button></div>
     <div class="eulogy" id="eulogy">
       <button class="eplay" id="eulPlay" type="button" aria-label="Play Jon’s Eulogy"><svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg></button>
-      <div class="einfo"><b>Jon’s Eulogy</b>
+      <div class="einfo"><label class="evol"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9z"/><path d="M15.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="range" id="eulVol" min="0" max="100" step="1" value="100" aria-label="Eulogy volume"></label><b>Jon’s Eulogy</b>
         <input type="range" id="eulSeek" min="0" max="1000" step="1" value="0" aria-label="Eulogy position"></div>
       <output id="eulTime">0:00</output>
       <audio id="eulAudio" src="eulogy.mp3" preload="metadata"></audio>
@@ -752,6 +754,9 @@
       au.addEventListener('play', () => { btn.innerHTML = ICO.pause; btn.setAttribute('aria-label', 'Pause Jon’s Eulogy'); });
       ['pause', 'ended'].forEach(e => au.addEventListener(e, () => { btn.innerHTML = ICO.play; btn.setAttribute('aria-label', 'Play Jon’s Eulogy'); }));
       ['timeupdate', 'loadedmetadata', 'durationchange'].forEach(e => au.addEventListener(e, sync));
+      const vol = $('eulVol'); try { const v = localStorage.getItem('poppy-eul-vol'); if (v !== null) vol.value = v; } catch (e) {}
+      au.volume = vol.value / 100;
+      vol.addEventListener('input', () => { au.volume = vol.value / 100; try { localStorage.setItem('poppy-eul-vol', vol.value); } catch (e) {} });
       seek.addEventListener('input', () => { if (au.duration) { au.currentTime = seek.value / 1000 * au.duration; sync(); } });
     })();
 
