@@ -165,6 +165,8 @@
     @media (min-width:700px) { .begin { top:max(19.5%, calc(clamp(190px,36vmin,340px) / 2 + 8px)); left:50%; } } /* centred across the screen, up above the name */
     .begin.gone { opacity:0; visibility:hidden; pointer-events:none; transition:opacity .5s ease, visibility 0s .5s; }
     .customize { position:absolute; top:calc(var(--safe-t) + 16px); right:18px; z-index:5; padding:9px 14px; border:1px solid color-mix(in srgb, var(--text) 22%, transparent); border-radius:999px; background:transparent; color:var(--muted); cursor:pointer; font:700 .68rem Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; }
+    .customize { transition:opacity .25s ease, color .2s, border-color .2s, background .2s; }
+    body.fs:not(.controls-visible):not(.editing) .customize { opacity:0; pointer-events:none; } /* full screen: hidden until the mouse moves for real; outside full screen it is always there */
     .customize:hover, .customize:focus-visible, .customize.on { color:var(--accent); border-color:var(--accent); outline:none; }
     .customize.on { background:color-mix(in srgb, var(--accent) 12%, transparent); }
 
@@ -768,19 +770,18 @@
       const vol = $('eulVol'); try { const v = localStorage.getItem('poppy-eul-vol'); if (v !== null) vol.value = v; } catch (e) {}
       au.volume = vol.value / 100;
       vol.addEventListener('input', () => { au.volume = vol.value / 100; try { localStorage.setItem('poppy-eul-vol', vol.value); } catch (e) {} });
-      // While the eulogy plays it drives the slides: 40, 41, 44 (to 0:25), 50 held until 0:55, then good pictures of Poppy in random order.
-      const OPEN = [[40, 0], [41, 25 / 3], [44, 50 / 3]], HOLD = [50, 25, 55], STEP = 8;
+      // While the eulogy plays it drives the slides: 40, 41, 44 (to 0:25), the Pontoon picture (50) held until 1:15, then 94, 92, 102, 55 and 108.
+      const OPEN = [[40, 0], [41, 25 / 3], [44, 50 / 3]], HOLD = [50, 25, 75], STEP = 8;
       let cues = null, eulOn = false;
       const nameAt = n => (BASE && BASE.order && BASE.order[n - 1]) || files[n - 1];
+      const AFTER = [94, 92, 102, 55], AFTER_STEP = 10, LAST = 108; // after the Pontoon hold: these four, then slide 108 for the rest
       function buildCues() {
         const named = [...OPEN.map(o => o[0]), HOLD[0]].map(nameAt);
-        const pool = files.filter(f => !named.includes(f) && byFile[f] && byFile[f].category !== 'Poppy and his family');
-        const src = pool.length ? pool : files.filter(f => !named.includes(f));
-        const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
         const c = OPEN.map((o, i) => ({ t: o[1], f: named[i], dur: (i < 2 ? OPEN[i + 1][1] : HOLD[1]) - o[1] }));
         c.push({ t: HOLD[1], f: named[3], dur: HOLD[2] - HOLD[1] });
-        let order = [], t = HOLD[2];
-        while (t < 600 && src.length) { if (!order.length) order = shuffle(src.slice()); c.push({ t, f: order.pop(), dur: STEP }); t += STEP; }
+        let t = HOLD[2];
+        AFTER.forEach(n => { c.push({ t, f: nameAt(n), dur: AFTER_STEP }); t += AFTER_STEP; });
+        c.push({ t, f: nameAt(LAST), dur: 120 });
         return c;
       }
       function cueSync() {
@@ -797,8 +798,14 @@
       au.addEventListener('timeupdate', cueSync);
       au.addEventListener('seeked', cueSync);
       au.addEventListener('ended', () => { eulOn = false; });
+      // the toolbar button shows Pause whenever the slideshow or the eulogy is playing
+      const iconSync = () => { const on = playing || !au.paused; playPause.innerHTML = on ? ICON_PAUSE : ICON_PLAY; playPause.setAttribute('aria-label', on ? 'Pause' : 'Play'); };
+      ['play', 'pause', 'ended', 'timeupdate'].forEach(e => au.addEventListener(e, iconSync));
+      au.addEventListener('play', () => document.body.classList.add('eul-live'));
+      ['pause', 'ended'].forEach(e => au.addEventListener(e, () => document.body.classList.remove('eul-live')));
       // the main Play/Pause button controls the eulogy while it is in charge; starting the normal show hands the slides back
-      window.eulCtl = { on: () => eulOn, toggle: () => { if (au.paused) au.play().catch(() => {}); else au.pause(); }, stop: () => { eulOn = false; au.pause(); } };
+      window.eulCtl = { playing: () => !au.paused, pause: () => au.pause(), reset: () => { eulOn = false; au.pause(); try { au.currentTime = 0; } catch (e) {} cues = null; },
+        on: () => eulOn, toggle: () => { if (au.paused) au.play().catch(() => {}); else au.pause(); }, stop: () => { eulOn = false; au.pause(); } };
       seek.addEventListener('input', () => { if (au.duration) { au.currentTime = seek.value / 1000 * au.duration; sync(); } });
     })();
 
@@ -1365,6 +1372,7 @@
       timer = setTimeout(() => { if (!last) show(current + 1); else if (state.opts.loop) show(0); else endShow(); }, slideMs(current));
     }
     function goHome() { // Esc outside full screen: stop and return to the opening page, where Edit mode is
+      window.eulCtl?.reset();
       pause(); $('endCard').classList.remove('show');
       if (current !== 0) show(0);
     }
@@ -1377,7 +1385,7 @@
     function setLoop(on) { state.opts.loop = on; setLoopUi(); save(); }
     async function keepAwake() { try { wakeLock = await navigator.wakeLock?.request('screen'); } catch (_) { /* optional */ } }
     // The Begin button goes away once the show is running, and returns if it stops while on the opening slide.
-    function updateBegin() { $('begin').classList.toggle('gone', playing); } // not tied to the current slide: the intro slide is still on screen while it fades out
+    function updateBegin() { $('begin').classList.toggle('gone', playing); document.body.classList.toggle('show-live', playing); } // not tied to the current slide: the intro slide is still on screen while it fades out
     function updatePlayUi() { // the Play button in the Edit panel doubles as Pause, and the list shows it is live
       const b = $('modePlay'); if (!b) return;
       b.textContent = playing ? '❚❚ Pause' : '▶ Play'; b.classList.toggle('playing', playing); b.setAttribute('aria-pressed', String(playing));
@@ -1420,7 +1428,8 @@
       document.body.classList.toggle('fs', on); // the Now playing bar is only shown outside full screen
       fullscreenBtn.setAttribute('aria-label', on ? 'Exit full screen' : 'Enter full screen');
       if (!on) { // Esc (or the browser) left full screen: stop the show where it is
-        if (!leavingFullscreen && playing) { pause(); toast('Paused — press ▶ to keep going'); }
+        if (!leavingFullscreen && window.eulCtl?.playing()) { window.eulCtl.pause(); toast('Eulogy paused — press Esc again for the main page'); }
+        else if (!leavingFullscreen && playing) { pause(); toast('Paused — press ▶ to keep going'); }
         leavingFullscreen = false;
       }
     });
@@ -2300,7 +2309,7 @@
       else if (event.key === ' ') { event.preventDefault(); togglePlay(); }
       else if (event.key.toLowerCase() === 'f') toggleFullscreen();
       else if (event.key.toLowerCase() === 'e') (isEditing() ? closePanel() : openPanel());
-      else if (event.key === 'Escape') { if (isEditing()) closePanel(); else if (!document.fullscreenElement) goHome(); }
+      else if (event.key === 'Escape') { if (isEditing()) closePanel(); else if (window.eulCtl?.playing()) window.eulCtl.pause(); else if (!document.fullscreenElement) goHome(); } // Esc: stop the eulogy first, then back to the main page
       else if (event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.metaKey) restart();
       else if (event.key === '?') toggleHelp();
       else if (event.key === 'Home') show(0);
