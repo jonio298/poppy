@@ -758,8 +758,7 @@
       };
       btn.addEventListener('click', () => {
         if (!au.paused) return au.pause();
-        // Starting: tuck the menu away, go full screen and let the eulogy run the slides.
-        if (isEditing()) closePanel();
+        // Starting: go full screen and let the eulogy run the slides. The menu stays open for now.
         if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.body.classList.contains('fs')) toggleFullscreen();
         wake(2500);
         au.play().catch(() => {});
