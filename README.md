@@ -5,7 +5,7 @@ A full-screen photo slideshow created in loving memory of Charles “Charlie” 
 ## Two modes
 
 **Play mode** is the clean slideshow.
-- Tap or click **Begin slideshow** to start. It begins on the opening slide (“In Loving Memory”), which stays for 12 seconds (adjustable on the Show tab) before the photos start. The photos are timed evenly across the 22:24 playlist by default.
+- Tap or click the large frosted-blue **Start Memorial** button in the centre of the opening slide. It goes full screen automatically. It begins on the opening slide (“In Loving Memory”), which stays for 12 seconds (adjustable on the Show tab) before the photos start. The photos are timed evenly across the 22:24 playlist by default.
 - **Controls:** outside full screen the play/pause controls live in the bottom bar, centered, with the "Now playing" song on the left and the time on the right (on a phone the song is on the first row and the controls on the second). In full screen the bar is replaced by a floating control bar that disappears and comes back when you move the mouse (or tap on a phone). In full screen, moving between photos with the arrow keys (or a swipe) only flashes the “12 / 114” counter in the corner; the controls come back when you move the mouse.
 - **Phones:** swipe left/right to change photos.
 - **Home:** the house button at the upper left of the slideshow goes back to the opening slide and stops, like Esc.

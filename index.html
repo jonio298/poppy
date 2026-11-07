@@ -154,16 +154,22 @@
     @keyframes writeOn { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0 -2% 0 0); } }
     @media (prefers-reduced-motion:reduce) { .closing .cl-line { clip-path:none !important; animation:none !important; } .closing .rule { opacity:1; animation:none !important; } }
     @keyframes rise { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
-    .begin { margin-top:38px; min-height:48px; padding:14px 28px; border:1px solid color-mix(in srgb, var(--accent) 75%, transparent); border-radius:999px; background:color-mix(in srgb, var(--accent) 10%, transparent); color:var(--text); cursor:pointer; font:700 .82rem Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; transition:background .25s,color .25s; }
-    .begin:hover:not(:disabled), .begin:focus-visible { background:var(--accent); color:var(--bg); outline:none; }
-    .begin:disabled { cursor:wait; opacity:.55; }
-    .begin.gone { opacity:0; visibility:hidden; pointer-events:none; transition:opacity .5s ease, visibility 0s .5s; } /* keeps its space so the title doesn't jump */
+    .begin { position:absolute; top:50%; left:50%; z-index:6; width:clamp(190px,36vmin,340px); aspect-ratio:1; margin:0; padding:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(8px,1.6vmin,16px); border:1px solid rgba(200,225,255,.45); border-radius:50%; cursor:pointer; color:#fff; font:700 clamp(.78rem,1.9vmin,1.1rem) Arial,sans-serif; letter-spacing:.16em; text-transform:uppercase; text-align:center;
+      background:radial-gradient(circle at 32% 24%, rgba(190,220,255,.07), rgba(70,130,225,.05) 62%, rgba(40,90,190,.05)); text-shadow:0 1px 10px rgba(10,40,120,.7); -webkit-backdrop-filter:blur(22px) saturate(1.5); backdrop-filter:blur(22px) saturate(1.5);
+      box-shadow:0 10px 40px rgba(20,60,150,.3), 0 0 0 10px rgba(120,170,255,.07), inset 0 2px 14px rgba(255,255,255,.22); transform:translate(-50%,-50%); transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease, background .35s ease, opacity .5s ease, visibility 0s; }
+    .begin svg { width:34%; height:34%; fill:#fff; filter:drop-shadow(0 2px 8px rgba(10,40,120,.55)); margin-left:5%; transition:transform .35s ease; }
+    .begin:hover:not(:disabled), .begin:focus-visible { transform:translate(-50%,-50%) scale(1.07); outline:none; background:radial-gradient(circle at 32% 24%, rgba(215,235,255,.16), rgba(85,150,245,.12) 62%, rgba(50,105,215,.12)); box-shadow:0 22px 80px rgba(40,100,230,.75), 0 0 0 16px rgba(140,185,255,.2), 0 0 60px rgba(130,185,255,.6), inset 0 2px 16px rgba(255,255,255,.55); }
+    .begin:hover:not(:disabled) svg, .begin:focus-visible svg { transform:scale(1.12); }
+    .begin:active:not(:disabled) { transform:translate(-50%,-50%) scale(.98); }
+    .begin:disabled { cursor:wait; opacity:.7; } .begin:disabled svg { display:none; }
+    @media (min-width:700px) { .begin { top:max(19.5%, calc(clamp(190px,36vmin,340px) / 2 + 8px)); left:50%; } } /* centred across the screen, up above the name */
+    .begin.gone { opacity:0; visibility:hidden; pointer-events:none; transition:opacity .5s ease, visibility 0s .5s; }
     .customize { position:absolute; top:calc(var(--safe-t) + 16px); right:18px; z-index:5; padding:9px 14px; border:1px solid color-mix(in srgb, var(--text) 22%, transparent); border-radius:999px; background:transparent; color:var(--muted); cursor:pointer; font:700 .68rem Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; }
     .customize:hover, .customize:focus-visible, .customize.on { color:var(--accent); border-color:var(--accent); outline:none; }
     .customize.on { background:color-mix(in srgb, var(--accent) 12%, transparent); }
 
     /* ---------- Controls ---------- */
-    .chrome { z-index:10; pointer-events:none; opacity:0; transition:opacity .35s ease, right .35s ease; }
+    .chrome { z-index:10; pointer-events:none; opacity:0; transition:opacity .25s ease, right .35s ease; }
     body.controls-visible .chrome, body.editing .chrome, body:not(.fs) .chrome { opacity:1; }
     .homebtn { position:absolute; z-index:3; left:clamp(12px,3vw,24px); top:calc(var(--safe-t) + 12px); width:42px; height:42px; display:grid; place-items:center; border:1px solid color-mix(in srgb, var(--text) 20%, transparent); border-radius:50%; background:color-mix(in srgb, var(--bg) 72%, transparent); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); color:var(--text); cursor:pointer; pointer-events:auto; }
     .homebtn svg { width:20px; height:20px; fill:currentColor; }
@@ -391,7 +397,6 @@
       .cover-copy { order:2; align-self:start; }
       .portrait { order:1; height:100%; min-height:0; max-height:46dvh; align-self:end; }
       .rule { margin:22px auto 18px; background:linear-gradient(90deg,transparent,var(--accent),transparent); }
-      .begin { margin-top:24px; width:100%; max-width:320px; }
       .eyebrow { margin-bottom:14px; }
       .topline span:first-child { display:none; }
       .topline { justify-content:center; }
@@ -423,7 +428,6 @@
       .portrait { height:80dvh; max-height:none; }
       h1 { font-size:2.6rem; }
       .rule { margin:16px 0; background:linear-gradient(90deg,var(--accent),transparent); }
-      .begin { margin-top:16px; width:auto; }
       .swipe-tip { bottom:64px; padding:10px 18px; font-size:1rem; }
       body.editing .stage, body.editing .chrome { right:var(--panel-w); bottom:0; }
       .panel { top:0; left:auto; width:var(--panel-w); height:auto; border-radius:0; border-top:0; border-left:1px solid rgba(255,255,255,.14); transform:translateX(102%); }
@@ -485,8 +489,8 @@
         <h1 id="cvTitle">Charles Ross</h1>
         <div class="rule"></div>
         <p class="names" id="cvNames">“Charlie” &nbsp; “Dad” &nbsp; “Poppy”</p>
-        <button class="begin" id="begin" disabled>Loading photos…</button>
-      </div>
+        </div>
+      <button class="begin" id="begin" type="button" disabled><span id="beginLabel">Loading photos…</span></button>
       <img class="portrait" src="photos/098_UNDATED_Charlie Portrait.webp" alt="Portrait of Charles Ross">
       <p class="madeby">Made with care by Jonathan Shelley</p>
     </section>
@@ -545,7 +549,7 @@
     <div class="jonrow" id="jonRow" hidden><button class="reload-toggle on" id="jonSwitch" type="button" role="switch" aria-checked="true"><span>Jon’s Version</span><span class="rt-track"><i></i></span></button></div>
     <div class="eulogy" id="eulogy">
       <button class="eplay" id="eulPlay" type="button" aria-label="Play Jon’s Eulogy"><svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg></button>
-      <div class="einfo"><label class="evol"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9z"/><path d="M15.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="range" id="eulVol" min="0" max="100" step="1" value="100" aria-label="Eulogy volume"></label><b>Jon’s Eulogy</b>
+      <div class="einfo"><label class="evol"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9z"/><path d="M15.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="range" id="eulVol" min="0" max="100" step="1" value="70" aria-label="Eulogy volume"></label><b>Jon’s Eulogy</b>
         <input type="range" id="eulSeek" min="0" max="1000" step="1" value="0" aria-label="Eulogy position"></div>
       <output id="eulTime">0:00</output>
       <audio id="eulAudio" src="eulogy.mp3" preload="metadata"></audio>
@@ -750,7 +754,14 @@
         if (!seek.matches(':active')) seek.value = d ? Math.round(au.currentTime / d * 1000) : 0;
         tm.textContent = fmtDur(au.currentTime) + (d ? ' / ' + fmtDur(d) : '');
       };
-      btn.addEventListener('click', () => { if (au.paused) au.play().catch(() => {}); else au.pause(); });
+      btn.addEventListener('click', () => {
+        if (!au.paused) return au.pause();
+        // Starting: tuck the menu away, go full screen and let the eulogy run the slides.
+        if (isEditing()) closePanel();
+        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.body.classList.contains('fs')) toggleFullscreen();
+        wake(2500);
+        au.play().catch(() => {});
+      });
       au.addEventListener('play', () => { btn.innerHTML = ICO.pause; btn.setAttribute('aria-label', 'Pause Jon’s Eulogy'); });
       ['pause', 'ended'].forEach(e => au.addEventListener(e, () => { btn.innerHTML = ICO.play; btn.setAttribute('aria-label', 'Play Jon’s Eulogy'); }));
       ['timeupdate', 'loadedmetadata', 'durationchange'].forEach(e => au.addEventListener(e, sync));
@@ -786,6 +797,8 @@
       au.addEventListener('timeupdate', cueSync);
       au.addEventListener('seeked', cueSync);
       au.addEventListener('ended', () => { eulOn = false; });
+      // the main Play/Pause button controls the eulogy while it is in charge; starting the normal show hands the slides back
+      window.eulCtl = { on: () => eulOn, toggle: () => { if (au.paused) au.play().catch(() => {}); else au.pause(); }, stop: () => { eulOn = false; au.pause(); } };
       seek.addEventListener('input', () => { if (au.duration) { au.currentTime = seek.value / 1000 * au.duration; sync(); } });
     })();
 
@@ -1371,6 +1384,7 @@
       listEl.classList.toggle('is-playing', playing);
     }
     function play() {
+      window.eulCtl?.stop();
       playing = true; updateBegin(); updatePlayUi(); slideStart = performance.now(); updateNowPlaying();
       if (!tipShown) tip();
       playPause.innerHTML = ICON_PAUSE; playPause.setAttribute('aria-label', 'Pause slideshow');
@@ -1382,6 +1396,7 @@
       playPause.innerHTML = ICON_PLAY; playPause.setAttribute('aria-label', 'Play slideshow');
     }
     function togglePlay() {
+      if (window.eulCtl?.on()) return window.eulCtl.toggle();
       if (playing) return pause();
       if (slides.length < 2) return;
       if (current >= slides.length - 1) show(0);
@@ -2262,7 +2277,7 @@
       basePhotos = list; buildDefaultSongs(); await ensureBlobs(); rebuildPhotoIndex();
       buildSlides(0);
       const begin = $('begin');
-      begin.disabled = false; begin.textContent = 'Begin slideshow';
+      begin.disabled = false; begin.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16l13-8z"/></svg><span>Start Memorial</span>';
       load(0);
     }).catch(() => { $('begin').textContent = 'Photos could not load — please refresh'; });
     updateSaveUi(); renderVersions();
@@ -2305,12 +2320,19 @@
 
     // Controls appear on movement or tap, then fade away.
     let controlsTimer;
-    function wake(ms = 2800) {
+    function wake(ms = 1500) {
       document.body.classList.add('controls-visible');
       clearTimeout(controlsTimer);
       controlsTimer = setTimeout(() => document.body.classList.remove('controls-visible'), ms);
     }
-    document.addEventListener('mousemove', () => wake());
+    // Only real, deliberate mouse movement brings the controls back (a nudge or a bump is ignored).
+    let moveAcc = 0, moveStamp = 0;
+    document.addEventListener('mousemove', e => {
+      const d = Math.hypot(e.movementX || 0, e.movementY || 0); if (!d) return;
+      const now = performance.now(); if (now - moveStamp > 400) moveAcc = 0;
+      moveStamp = now; moveAcc += d;
+      if (document.body.classList.contains('controls-visible') ? moveAcc > 6 : moveAcc >= 90) { wake(); moveAcc = 0; }
+    });
 
     // Touch: swipe to change slides (a quick flick or a longer drag), tap to show or hide the controls.
     let touch = null;
