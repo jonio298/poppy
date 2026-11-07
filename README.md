@@ -55,4 +55,4 @@ Press **Save** at the top of the Edit menu to keep a version. Versions, and any 
 
 ## Eulogy
 
-The **Edit Slide** tab starts with a player for the eulogy (`eulogy.mp3`): a play/pause button, a scrubber and the elapsed time. It plays independently of the slideshow music.
+The edit panel has a "Jon’s Eulogy" player (under the Jon’s Version switch, above the tabs) for the eulogy (`eulogy.mp3`): a play/pause button, a scrubber and the elapsed time. It plays independently of the slideshow music.
