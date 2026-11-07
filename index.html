@@ -225,6 +225,12 @@
     input[type=color] { width:100%; height:46px; padding:3px; border:1px solid rgba(255,255,255,.16); border-radius:10px; background:#0d130f; cursor:pointer; }
     .check { display:flex; align-items:center; gap:10px; margin-bottom:16px; cursor:pointer; }
     .check input { width:20px; height:20px; accent-color:var(--accent, #d8ba7a); }
+    .eulogy { display:flex; align-items:center; gap:12px; margin:0 0 14px; padding:12px; border:1px solid rgba(255,255,255,.14); border-radius:14px; background:rgba(255,255,255,.05); }
+    .eulogy .eplay { flex:none; width:46px; height:46px; border:0; border-radius:50%; background:#d8ba7a; cursor:pointer; display:grid; place-items:center; }
+    .eulogy .eplay svg { width:22px; height:22px; fill:#1a1408; } .eulogy .eplay:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+    .eulogy .einfo { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; } .eulogy .einfo b { font-size:.9rem; color:#f5f1e8; } .eulogy .einfo span { font-size:.74rem; color:#8fa08f; }
+    .eulogy .einfo input { width:100%; margin:6px 0 0; accent-color:#d8ba7a; }
+    .eulogy output { flex:none; font:700 .74rem Arial,sans-serif; color:#d8ba7a; font-variant-numeric:tabular-nums; }
     .note { margin:0 0 16px; color:#8fa08f; font-size:.8rem; }
     .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px; margin-bottom:16px; }
     .thumb { position:relative; aspect-ratio:1; border:2px solid transparent; border-radius:8px; overflow:hidden; padding:0; background:#0d130f; cursor:pointer; }
@@ -573,6 +579,13 @@
         <b id="slideNavLabel">Slide 1 of 1</b>
         <button class="navbtn" id="slideNext" type="button" aria-label="Next slide" title="Next slide"><svg viewBox="0 0 24 24"><path d="M8.5 4.5 16 12l-7.5 7.5" /></svg></button>
       </div>
+      <div class="eulogy" id="eulogy">
+        <button class="eplay" id="eulPlay" type="button" aria-label="Play the eulogy"><svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg></button>
+        <div class="einfo"><b>Eulogy for Poppy</b><span>Read by Jonathan</span>
+          <input type="range" id="eulSeek" min="0" max="1000" step="1" value="0" aria-label="Eulogy position"></div>
+        <output id="eulTime">0:00</output>
+        <audio id="eulAudio" src="eulogy.mp3" preload="metadata"></audio>
+      </div>
       <p class="note" id="slideNone">Pick a photo in the Slides list to edit it.</p>
       <div id="slideForm">
         <button class="btn sendbtn" id="sendTo" type="button"><span id="sendLabel">♪ Send to a song…</span></button>
@@ -727,6 +740,20 @@
     const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg>';
     const $ = id => document.getElementById(id);
     const stage = $('stage'), counter = $('counter'), progress = $('progress'), playPause = $('playPause'), fullscreenBtn = $('fullscreen');
+    (function () {
+      const au = $('eulAudio'), btn = $('eulPlay'), seek = $('eulSeek'), tm = $('eulTime');
+      const ICO = { play: ICON_PLAY, pause: ICON_PAUSE };
+      const sync = () => {
+        const d = au.duration || 0;
+        if (!seek.matches(':active')) seek.value = d ? Math.round(au.currentTime / d * 1000) : 0;
+        tm.textContent = fmtDur(au.currentTime) + (d ? ' / ' + fmtDur(d) : '');
+      };
+      btn.addEventListener('click', () => { if (au.paused) au.play().catch(() => {}); else au.pause(); });
+      au.addEventListener('play', () => { btn.innerHTML = ICO.pause; btn.setAttribute('aria-label', 'Pause the eulogy'); });
+      ['pause', 'ended'].forEach(e => au.addEventListener(e, () => { btn.innerHTML = ICO.play; btn.setAttribute('aria-label', 'Play the eulogy'); }));
+      ['timeupdate', 'loadedmetadata', 'durationchange'].forEach(e => au.addEventListener(e, sync));
+      seek.addEventListener('input', () => { if (au.duration) { au.currentTime = seek.value / 1000 * au.duration; sync(); } });
+    })();
 
     // ---------- Saved edits ----------
     let jonsOn = false; // is the show on screen Jon's Version (as opposed to the plain original, or a version saved on this device)?

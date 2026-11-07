@@ -52,3 +52,7 @@ By default the transitions are shuffled randomly (never the same one twice in a 
 Press **Save** at the top of the Edit menu to keep a version. Versions, and any pictures added, are stored in that person's own browser (localStorage plus a second IndexedDB copy; a small cookie lists the saved versions so the page can tell if browser data was cleared), and the slideshow opens as the most recently saved or opened version every time, even after a reload. Unsaved changes are not kept on reload. **Reset** throws away unsaved changes and goes back to the last saved version (or, if nothing is unsaved, back to the original, which is only kept if you press Save). Ctrl+S also saves. Each person sees their own version, and the original is never changed. Use **Download my version** (Slides tab) to back one up or move it to another device.
 
 `photos/thumbs/` holds small previews used by the slide list.
+
+## Eulogy
+
+The **Edit Slide** tab starts with a player for the eulogy (`eulogy.mp3`): a play/pause button, a scrubber and the elapsed time. It plays independently of the slideshow music.
